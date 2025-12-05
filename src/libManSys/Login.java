@@ -59,30 +59,30 @@ public class Login extends JFrame {
 		JLabel lblLibManSys = new JLabel("Library Management System");
 		lblLibManSys.setHorizontalAlignment(SwingConstants.CENTER);
 		lblLibManSys.setFont(new Font("Dialog", Font.BOLD, 18));
-		lblLibManSys.setBounds(12, 26, 276, 38);
+		lblLibManSys.setBounds(12, 36, 276, 38);
 		contentPane.add(lblLibManSys);
 		
 		JLabel lblEmail = new JLabel("Email");
 		lblEmail.setHorizontalAlignment(SwingConstants.CENTER);
-		lblEmail.setBounds(105, 91, 96, 14);
+		lblEmail.setBounds(101, 86, 96, 14);
 		contentPane.add(lblEmail);
 		
 		JLabel lblPassword = new JLabel("Password");
 		lblPassword.setHorizontalAlignment(SwingConstants.CENTER);
-		lblPassword.setBounds(105, 167, 96, 14);
+		lblPassword.setBounds(101, 162, 96, 14);
 		contentPane.add(lblPassword);
 		
 		txtEmail = new JTextField();
-		txtEmail.setBounds(105, 117, 96, 18);
+		txtEmail.setBounds(101, 112, 96, 18);
 		contentPane.add(txtEmail);
 		txtEmail.setColumns(10);
 		
 		pwdPassword = new JPasswordField();
-		pwdPassword.setBounds(105, 193, 96, 18);
+		pwdPassword.setBounds(101, 188, 96, 18);
 		contentPane.add(pwdPassword);
 		
 		JButton btnLogin = new JButton("Login");
-		btnLogin.setBounds(101, 264, 100, 24);
+		btnLogin.setBounds(101, 237, 100, 24);
 		contentPane.add(btnLogin);
 		btnLogin.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
@@ -112,8 +112,14 @@ public class Login extends JFrame {
 			if(result.next()){
 				account.setEmail(result.getString("email"));
 				account.setPassword(result.getString("password"));
+				account.setRole(result.getString("role")); // Set the role
 				if(password.equals(account.getPassword())) {
-					JOptionPane.showMessageDialog(this, "Login succesful!","Login succesful", JOptionPane.INFORMATION_MESSAGE);
+					
+					if ((account.getRole().equals("librarian"))) {
+						JOptionPane.showMessageDialog(this, "Login successful! Your role is: librarian","Login successful", JOptionPane.INFORMATION_MESSAGE);
+					} else {
+						JOptionPane.showMessageDialog(this, "Login successful! Your role is: reader" ,"Login successful", JOptionPane.INFORMATION_MESSAGE);
+					}
 				}else {
 					JOptionPane.showMessageDialog(this, "Login Failed! Incorrect Password","Login Failed. Incorrect Password", JOptionPane.ERROR_MESSAGE);
 				}
