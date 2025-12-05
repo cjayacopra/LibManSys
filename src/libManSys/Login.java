@@ -6,10 +6,13 @@ import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
 
+import com.formdev.flatlaf.*;
+
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JTextField;
 import javax.swing.JPasswordField;
+import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import java.awt.Font;
 import java.awt.event.ActionEvent;
@@ -18,6 +21,9 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 
 import javax.swing.SwingConstants;
+import javax.swing.UIManager;
+import javax.swing.JSplitPane;
+import javax.swing.JSeparator;
 
 public class Login extends JFrame {
 
@@ -48,42 +54,53 @@ public class Login extends JFrame {
 	 * Create the frame.
 	 */
 	public Login() {
+		
+		try {
+		    UIManager.setLookAndFeel( new FlatDarculaLaf() );
+		} catch( Exception ex ) {
+		    System.err.println( "Failed to initialize LaF" );
+		}
 		setTitle("L O G I N");
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		setBounds(100, 100, 300, 300);
+		setBounds(100, 100, 500, 306);
 		contentPane = new JPanel();
-		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
 		setContentPane(contentPane);
 		contentPane.setLayout(null);
 		
-		JLabel lblLibManSys = new JLabel("Library Management System");
-		lblLibManSys.setHorizontalAlignment(SwingConstants.CENTER);
-		lblLibManSys.setFont(new Font("Dialog", Font.BOLD, 18));
-		lblLibManSys.setBounds(12, 36, 276, 38);
-		contentPane.add(lblLibManSys);
-		
 		JLabel lblEmail = new JLabel("Email");
 		lblEmail.setHorizontalAlignment(SwingConstants.CENTER);
-		lblEmail.setBounds(101, 86, 96, 14);
+		lblEmail.setBounds(329, 94, 96, 14);
 		contentPane.add(lblEmail);
 		
 		JLabel lblPassword = new JLabel("Password");
 		lblPassword.setHorizontalAlignment(SwingConstants.CENTER);
-		lblPassword.setBounds(101, 162, 96, 14);
+		lblPassword.setBounds(329, 179, 96, 14);
 		contentPane.add(lblPassword);
 		
 		txtEmail = new JTextField();
-		txtEmail.setBounds(101, 112, 96, 18);
+		txtEmail.setBounds(278, 120, 200, 25);
 		contentPane.add(txtEmail);
 		txtEmail.setColumns(10);
 		
 		pwdPassword = new JPasswordField();
-		pwdPassword.setBounds(101, 188, 96, 18);
+		pwdPassword.setBounds(278, 205, 200, 25);
 		contentPane.add(pwdPassword);
 		
 		JButton btnLogin = new JButton("Login");
-		btnLogin.setBounds(101, 237, 100, 24);
+		btnLogin.setBounds(329, 242, 100, 24);
 		contentPane.add(btnLogin);
+		
+		ImageIcon logo = new ImageIcon("assets/LibManSys_Logo.png");
+		
+		JLabel lblLogo = new JLabel(logo);
+		lblLogo.setBounds(0, 0, 260, 306);
+		contentPane.add(lblLogo);
+		
+		JLabel lblLibManSys = new JLabel("<html><center>LIBRARY MANAGEMENT<br>SYSTEM</center></html>");
+		lblLibManSys.setHorizontalAlignment(SwingConstants.CENTER);
+		lblLibManSys.setFont(new Font("Dialog", Font.BOLD, 15));
+		lblLibManSys.setBounds(272, 26, 216, 56);
+		contentPane.add(lblLibManSys);
 		btnLogin.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				login(new LibraryAccount());
@@ -116,8 +133,10 @@ public class Login extends JFrame {
 				if(password.equals(account.getPassword())) {
 					
 					if ((account.getRole().equals("librarian"))) {
+						// TODO: Replace this with the librarian dashboard
 						JOptionPane.showMessageDialog(this, "Login successful! Your role is: librarian","Login successful", JOptionPane.INFORMATION_MESSAGE);
 					} else {
+						// TODO: Replace this with the reader dashboard
 						JOptionPane.showMessageDialog(this, "Login successful! Your role is: reader" ,"Login successful", JOptionPane.INFORMATION_MESSAGE);
 					}
 				}else {
