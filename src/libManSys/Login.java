@@ -4,10 +4,7 @@ import java.awt.EventQueue;
 
 import javax.swing.JFrame;
 import javax.swing.JPanel;
-import javax.swing.border.EmptyBorder;
-
 import com.formdev.flatlaf.*;
-
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JTextField;
@@ -22,8 +19,10 @@ import java.sql.ResultSet;
 
 import javax.swing.SwingConstants;
 import javax.swing.UIManager;
-import javax.swing.JSplitPane;
-import javax.swing.JSeparator;
+import java.awt.GridBagLayout;
+import java.awt.GridBagConstraints;
+import java.awt.Insets;
+
 
 public class Login extends JFrame {
 
@@ -60,52 +59,131 @@ public class Login extends JFrame {
 		} catch( Exception ex ) {
 		    System.err.println( "Failed to initialize LaF" );
 		}
+
 		setTitle("L O G I N");
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		setBounds(100, 100, 500, 306);
+		setBounds(100, 100, 500, 300);
 		contentPane = new JPanel();
 		setContentPane(contentPane);
-		contentPane.setLayout(null);
-		
-		JLabel lblEmail = new JLabel("Email");
-		lblEmail.setHorizontalAlignment(SwingConstants.CENTER);
-		lblEmail.setBounds(329, 94, 96, 14);
-		contentPane.add(lblEmail);
-		
-		JLabel lblPassword = new JLabel("Password");
-		lblPassword.setHorizontalAlignment(SwingConstants.CENTER);
-		lblPassword.setBounds(329, 179, 96, 14);
-		contentPane.add(lblPassword);
-		
-		txtEmail = new JTextField();
-		txtEmail.setBounds(278, 120, 200, 25);
-		contentPane.add(txtEmail);
-		txtEmail.setColumns(10);
-		
-		pwdPassword = new JPasswordField();
-		pwdPassword.setBounds(278, 205, 200, 25);
-		contentPane.add(pwdPassword);
-		
-		JButton btnLogin = new JButton("Login");
-		btnLogin.setBounds(329, 242, 100, 24);
-		contentPane.add(btnLogin);
 		
 		ImageIcon logo = new ImageIcon("assets/LibManSys_Logo.png");
+		GridBagLayout gbl_contentPane = new GridBagLayout();
+		gbl_contentPane.columnWidths = new int[]{488, 0};
+		gbl_contentPane.rowHeights = new int[]{288, 0};
+		gbl_contentPane.columnWeights = new double[]{0.0, Double.MIN_VALUE};
+		gbl_contentPane.rowWeights = new double[]{0.0, Double.MIN_VALUE};
+		contentPane.setLayout(gbl_contentPane);
 		
+		JPanel panel = new JPanel();
+		GridBagConstraints gbc_panel = new GridBagConstraints();
+		gbc_panel.fill = GridBagConstraints.BOTH;
+		gbc_panel.gridx = 0;
+		gbc_panel.gridy = 0;
+		contentPane.add(panel, gbc_panel);
+		GridBagLayout gbl_panel = new GridBagLayout();
+		gbl_panel.columnWidths = new int[]{261, 216, 0};
+		gbl_panel.rowHeights = new int[]{80, 0};
+		gbl_panel.columnWeights = new double[]{0.0, 0.0, Double.MIN_VALUE};
+		gbl_panel.rowWeights = new double[]{0.0, Double.MIN_VALUE};
+		panel.setLayout(gbl_panel);
+		
+		JPanel panel_1 = new JPanel();
+		GridBagConstraints gbc_panel_1 = new GridBagConstraints();
+		gbc_panel_1.fill = GridBagConstraints.BOTH;
+		gbc_panel_1.insets = new Insets(0, 0, 0, 5);
+		gbc_panel_1.gridx = 0;
+		gbc_panel_1.gridy = 0;
+		panel.add(panel_1, gbc_panel_1);
+		GridBagLayout gbl_panel_1 = new GridBagLayout();
+		gbl_panel_1.columnWidths = new int[]{261, 0};
+		gbl_panel_1.rowHeights = new int[]{80, 0};
+		gbl_panel_1.columnWeights = new double[]{1.0, Double.MIN_VALUE};
+		gbl_panel_1.rowWeights = new double[]{1.0, Double.MIN_VALUE};
+		panel_1.setLayout(gbl_panel_1);
 		JLabel lblLogo = new JLabel(logo);
-		lblLogo.setBounds(0, 0, 260, 306);
-		contentPane.add(lblLogo);
+		GridBagConstraints gbc_lblLogo = new GridBagConstraints();
+		gbc_lblLogo.fill = GridBagConstraints.BOTH;
+		gbc_lblLogo.gridx = 0;
+		gbc_lblLogo.gridy = 0;
+		panel_1.add(lblLogo, gbc_lblLogo);
+		
+		JPanel panel_2 = new JPanel();
+		GridBagConstraints gbc_panel_2 = new GridBagConstraints();
+		gbc_panel_2.gridx = 1;
+		gbc_panel_2.gridy = 0;
+		panel.add(panel_2, gbc_panel_2);
+		GridBagLayout gbl_panel_2 = new GridBagLayout();
+		gbl_panel_2.columnWidths = new int[]{216, 0};
+		gbl_panel_2.rowHeights = new int[]{0, 16, 26, 16, 26, 0, 0, 0, 0, 0};
+		gbl_panel_2.columnWeights = new double[]{0.0, Double.MIN_VALUE};
+		gbl_panel_2.rowWeights = new double[]{0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, Double.MIN_VALUE};
+		panel_2.setLayout(gbl_panel_2);
 		
 		JLabel lblLibManSys = new JLabel("<html><center>LIBRARY MANAGEMENT<br>SYSTEM</center></html>");
+		GridBagConstraints gbc_lblLibManSys = new GridBagConstraints();
+		gbc_lblLibManSys.anchor = GridBagConstraints.SOUTH;
+		gbc_lblLibManSys.fill = GridBagConstraints.HORIZONTAL;
+		gbc_lblLibManSys.insets = new Insets(0, 0, 5, 0);
+		gbc_lblLibManSys.gridx = 0;
+		gbc_lblLibManSys.gridy = 0;
+		panel_2.add(lblLibManSys, gbc_lblLibManSys);
 		lblLibManSys.setHorizontalAlignment(SwingConstants.CENTER);
 		lblLibManSys.setFont(new Font("Dialog", Font.BOLD, 15));
-		lblLibManSys.setBounds(272, 26, 216, 56);
-		contentPane.add(lblLibManSys);
+		
+		
+		JLabel lblEmail = new JLabel("Email");
+		GridBagConstraints gbc_lblEmail = new GridBagConstraints();
+		gbc_lblEmail.anchor = GridBagConstraints.NORTH;
+		gbc_lblEmail.fill = GridBagConstraints.HORIZONTAL;
+		gbc_lblEmail.insets = new Insets(0, 0, 5, 0);
+		gbc_lblEmail.gridx = 0;
+		gbc_lblEmail.gridy = 2;
+		panel_2.add(lblEmail, gbc_lblEmail);
+		lblEmail.setHorizontalAlignment(SwingConstants.CENTER);
+		
+		txtEmail = new JTextField();
+		GridBagConstraints gbc_txtEmail = new GridBagConstraints();
+		gbc_txtEmail.anchor = GridBagConstraints.NORTH;
+		gbc_txtEmail.fill = GridBagConstraints.HORIZONTAL;
+		gbc_txtEmail.insets = new Insets(0, 0, 5, 0);
+		gbc_txtEmail.gridx = 0;
+		gbc_txtEmail.gridy = 3;
+		panel_2.add(txtEmail, gbc_txtEmail);
+		txtEmail.setColumns(10);
+		
+		JLabel lblPassword = new JLabel("Password");
+		GridBagConstraints gbc_lblPassword = new GridBagConstraints();
+		gbc_lblPassword.anchor = GridBagConstraints.NORTH;
+		gbc_lblPassword.fill = GridBagConstraints.HORIZONTAL;
+		gbc_lblPassword.insets = new Insets(0, 0, 5, 0);
+		gbc_lblPassword.gridx = 0;
+		gbc_lblPassword.gridy = 4;
+		panel_2.add(lblPassword, gbc_lblPassword);
+		lblPassword.setHorizontalAlignment(SwingConstants.CENTER);
+		
+		pwdPassword = new JPasswordField();
+		GridBagConstraints gbc_pwdPassword = new GridBagConstraints();
+		gbc_pwdPassword.anchor = GridBagConstraints.NORTH;
+		gbc_pwdPassword.fill = GridBagConstraints.HORIZONTAL;
+		gbc_pwdPassword.insets = new Insets(0, 0, 5, 0);
+		gbc_pwdPassword.gridx = 0;
+		gbc_pwdPassword.gridy = 5;
+		panel_2.add(pwdPassword, gbc_pwdPassword);
+		
+		JButton btnLogin = new JButton("Login");
+		GridBagConstraints gbc_btnLogin = new GridBagConstraints();
+		gbc_btnLogin.gridheight = 2;
+		gbc_btnLogin.insets = new Insets(0, 0, 5, 0);
+		gbc_btnLogin.fill = GridBagConstraints.BOTH;
+		gbc_btnLogin.gridx = 0;
+		gbc_btnLogin.gridy = 7;
+		panel_2.add(btnLogin, gbc_btnLogin);
 		btnLogin.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				login(new LibraryAccount());
 			}
 		});
+		
 		
 
 	}
