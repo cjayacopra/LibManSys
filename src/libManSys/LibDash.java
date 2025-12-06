@@ -2,22 +2,29 @@ package libManSys;
 
 import java.awt.BorderLayout;
 import java.awt.EventQueue;
+import java.awt.Font;
+// Removed java.awt.Graphics;
+// Removed java.awt.image.BufferedImage;
+// Removed java.io.File;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
+// Removed javax.imageio.ImageIO;
 import javax.swing.JButton;
 import javax.swing.JFrame;
+import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTabbedPane;
 import javax.swing.JTable;
 import javax.swing.JTextField;
+import javax.swing.SwingConstants;
 import javax.swing.UIManager;
 import javax.swing.table.DefaultTableModel;
 
-import com.formdev.flatlaf.FlatDarculaLaf;
+import com.formdev.flatlaf.FlatLightLaf;
 
 public class LibDash {
 
@@ -29,14 +36,17 @@ public class LibDash {
     private DefaultTableModel readersModel;
     private DefaultTableModel librariansModel;
     private DbConnect db;
+    // Removed private BufferedImage logoImage;
 
     public static void main(String[] args) {
-        EventQueue.invokeLater(() -> {
-            try {
-                LibDash window = new LibDash();
-                window.getFrame().setVisible(true);
-            } catch (Exception e) {
-                e.printStackTrace();
+        EventQueue.invokeLater(new Runnable() {
+            public void run() {
+                try {
+                    LibDash window = new LibDash();
+                    window.getFrame().setVisible(true);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
             }
         });
     }
@@ -51,20 +61,39 @@ public class LibDash {
     }
 
     private void initialize() {
-    	
-		try {
-		    UIManager.setLookAndFeel( new FlatDarculaLaf() );
-		} catch( Exception ex ) {
-		    System.err.println( "Failed to initialize LaF" );
-		}
-		
-        setFrame(new JFrame("Librarian Dashboard"));
-        getFrame().setBounds(100, 100, 800, 600);
-        getFrame().setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        getFrame().getContentPane().setLayout(new BorderLayout());
+        try {
+            UIManager.setLookAndFeel(new FlatLightLaf());
+            // Removed logoImage = ImageIO.read(new File("assets/LogoWhite.png"));
+        } catch (Exception ex) {
+            System.err.println("Failed to initialize LaF."); // Adjusted error message
+        }
+
+        frame = new JFrame("Librarian Dashboard");
+        frame.setResizable(false);
+        frame.setBounds(100, 100, 1200, 700);
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setLocationRelativeTo(null);
+        frame.getContentPane().setLayout(null); // Using null layout for absolute positioning
+
+        // Side Panel (no logo, just title)
+        JPanel sidePanel = new JPanel(null); // Changed to regular JPanel with null layout
+        sidePanel.setBounds(0, 0, 250, 661); // Fixed size, left half
+        frame.getContentPane().add(sidePanel);
+
+        JLabel lblTitle = new JLabel("LibManSys");
+        lblTitle.setHorizontalAlignment(SwingConstants.CENTER);
+        lblTitle.setFont(new Font("Arial", Font.BOLD, 28));
+        lblTitle.setBounds(10, 25, 230, 40); // Centered within the side panel
+        sidePanel.add(lblTitle);
+
+        // Main Content Panel
+        JPanel mainContentPanel = new JPanel();
+        mainContentPanel.setBounds(250, 0, 934, 661); // Right half
+        frame.getContentPane().add(mainContentPanel);
+        mainContentPanel.setLayout(new BorderLayout(0, 0)); // Using BorderLayout for content within
 
         JTabbedPane tabbedPane = new JTabbedPane(JTabbedPane.TOP);
-        getFrame().getContentPane().add(tabbedPane, BorderLayout.CENTER);
+        mainContentPanel.add(tabbedPane, BorderLayout.CENTER);
 
         // Books Panel
         JPanel booksPanel = new JPanel(new BorderLayout());
@@ -87,7 +116,7 @@ public class LibDash {
         JButton deleteBookButton = new JButton("Delete Book");
         deleteBookButton.addActionListener(e -> deleteBook());
         booksButtonPanel.add(deleteBookButton);
-        
+
         // Readers Panel
         JPanel readersPanel = new JPanel(new BorderLayout());
         tabbedPane.addTab("Readers", null, readersPanel, null);
@@ -109,17 +138,17 @@ public class LibDash {
         JButton deleteReaderButton = new JButton("Delete Reader");
         deleteReaderButton.addActionListener(e -> deleteAccount("reader"));
         readersButtonPanel.add(deleteReaderButton);
-        
+
         // Librarians Panel
         JPanel librariansPanel = new JPanel(new BorderLayout());
         tabbedPane.addTab("Librarians", null, librariansPanel, null);
         librariansModel = new DefaultTableModel(new Object[]{"ID", "First Name", "Last Name", "Email", "Phone"}, 0);
         librariansTable = new JTable(librariansModel);
         librariansPanel.add(new JScrollPane(librariansTable), BorderLayout.CENTER);
-        
+
         JPanel librariansButtonPanel = new JPanel();
         librariansPanel.add(librariansButtonPanel, BorderLayout.SOUTH);
-        
+
         JButton addLibrarianButton = new JButton("Add Librarian");
         addLibrarianButton.addActionListener(e -> addAccount("librarian"));
         librariansButtonPanel.add(addLibrarianButton);
@@ -132,7 +161,7 @@ public class LibDash {
         deleteLibrarianButton.addActionListener(e -> deleteAccount("librarian"));
         librariansButtonPanel.add(deleteLibrarianButton);
     }
-    
+
     private void loadBooks() {
         try {
             String query = "SELECT * FROM books";
@@ -345,11 +374,11 @@ public class LibDash {
         }
     }
 
-	public JFrame getFrame() {
-		return frame;
-	}
+    public JFrame getFrame() {
+        return frame;
+    }
 
-	public void setFrame(JFrame frame) {
-		this.frame = frame;
-	}
+    public void setFrame(JFrame frame) {
+        this.frame = frame;
+    }
 }
