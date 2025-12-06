@@ -1,18 +1,16 @@
 package libManSys;
 
-import java.awt.BorderLayout;
 import java.awt.EventQueue;
 import java.awt.Font;
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
-import java.awt.Insets;
+import java.awt.Graphics;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.image.BufferedImage;
+import java.io.File;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 
-import javax.swing.Box;
-import javax.swing.ImageIcon;
+import javax.imageio.ImageIO;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -22,89 +20,89 @@ import javax.swing.JPasswordField;
 import javax.swing.JTextField;
 import javax.swing.SwingConstants;
 import javax.swing.UIManager;
-import javax.swing.border.EmptyBorder;
 
-import com.formdev.flatlaf.FlatDarculaLaf;
+import com.formdev.flatlaf.FlatLightLaf;
 
 public class Login extends JFrame {
 
     private static final long serialVersionUID = 1L;
+    private JPanel contentPane;
     private JTextField txtEmail;
     private JPasswordField pwdPassword;
-    DbConnect dbCon = new DbConnect();
+    private DbConnect dbCon = new DbConnect();
+    private BufferedImage logoImage;
 
     public static void main(String[] args) {
-        EventQueue.invokeLater(() -> {
-            try {
-                Login frame = new Login();
-                frame.setVisible(true);
-            } catch (Exception e) {
-                e.printStackTrace();
+        EventQueue.invokeLater(new Runnable() {
+            public void run() {
+                try {
+                    Login frame = new Login();
+                    frame.setVisible(true);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
             }
         });
     }
 
     public Login() {
         try {
-            UIManager.setLookAndFeel(new FlatDarculaLaf());
+            UIManager.setLookAndFeel(new FlatLightLaf());
+            logoImage = ImageIO.read(new File("assets/LogoWhite.png"));
         } catch (Exception ex) {
-            System.err.println("Failed to initialize LaF");
+            System.err.println("Failed to initialize LaF or load logo.");
         }
-
-        setTitle("Login");
+        setResizable(false);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setSize(600, 400);
-        setLocationRelativeTo(null); // Center the frame
-
-        JPanel mainPanel = new JPanel(new BorderLayout());
-        setContentPane(mainPanel);
+        setSize(900, 600);
+        setLocationRelativeTo(null);
+        
+        contentPane = new JPanel();
+        contentPane.setLayout(null);
+        setContentPane(contentPane);
 
         // Logo Panel
-        JPanel logoPanel = new JPanel(new BorderLayout());
-        logoPanel.setBorder(new EmptyBorder(20, 20, 20, 20));
-        ImageIcon logo = new ImageIcon("assets/LibManSys_Logo.png");
-        JLabel lblLogo = new JLabel(logo);
-        logoPanel.add(lblLogo, BorderLayout.CENTER);
-        mainPanel.add(logoPanel, BorderLayout.WEST);
+        @SuppressWarnings("serial")
+        JPanel logoPanel = new JPanel() {
+            @Override
+            protected void paintComponent(Graphics g) {
+                super.paintComponent(g);
+                if (logoImage != null) {
+                    g.drawImage(logoImage, 0, 0, getWidth(), getHeight(), this);
+                }
+            }
+        };
+        logoPanel.setBounds(0, 0, 450, 561); // Adjusted for window decorations
+        contentPane.add(logoPanel);
 
         // Login Panel
-        JPanel loginPanel = new JPanel(new GridBagLayout());
-        loginPanel.setBorder(new EmptyBorder(20, 20, 20, 20));
-        mainPanel.add(loginPanel, BorderLayout.CENTER);
-        
-        GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(5, 5, 5, 5);
-        gbc.fill = GridBagConstraints.HORIZONTAL;
+        JPanel loginPanel = new JPanel();
+        loginPanel.setLayout(null);
+        loginPanel.setBounds(450, 0, 434, 561); // Adjusted for window decorations
+        contentPane.add(loginPanel);
 
-        JLabel lblTitle = new JLabel("Library Management System");
-        lblTitle.setFont(new Font("Arial", Font.BOLD, 24));
+        JLabel lblTitle = new JLabel("W E L C O M E");
+        lblTitle.setFont(new Font("Arial", Font.BOLD, 28));
         lblTitle.setHorizontalAlignment(SwingConstants.CENTER);
-        gbc.gridx = 0;
-        gbc.gridy = 0;
-        gbc.gridwidth = 2;
-        loginPanel.add(lblTitle, gbc);
-        
-        gbc.gridy = 1;
-        loginPanel.add(Box.createVerticalStrut(20), gbc);
-
+        lblTitle.setBounds(67, 136, 300, 35);
+        loginPanel.add(lblTitle);
 
         txtEmail = new JTextField(20);
         txtEmail.putClientProperty("JTextField.placeholderText", "Email");
-        gbc.gridy = 2;
-        loginPanel.add(txtEmail, gbc);
+        txtEmail.setFont(new Font("Arial", Font.PLAIN, 16));
+        txtEmail.setBounds(67, 236, 300, 40);
+        loginPanel.add(txtEmail);
 
         pwdPassword = new JPasswordField(20);
         pwdPassword.putClientProperty("JTextField.placeholderText", "Password");
-        gbc.gridy = 3;
-        loginPanel.add(pwdPassword, gbc);
-        
-        gbc.gridy = 4;
-        loginPanel.add(Box.createVerticalStrut(10), gbc);
+        pwdPassword.setFont(new Font("Arial", Font.PLAIN, 16));
+        pwdPassword.setBounds(67, 296, 300, 40);
+        loginPanel.add(pwdPassword);
 
         JButton btnLogin = new JButton("Login");
-        btnLogin.setFont(new Font("Arial", Font.BOLD, 16));
-        gbc.gridy = 5;
-        loginPanel.add(btnLogin, gbc);
+        btnLogin.setFont(new Font("Arial", Font.BOLD, 20));
+        btnLogin.setBounds(67, 376, 300, 50);
+        loginPanel.add(btnLogin);
 
         btnLogin.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
