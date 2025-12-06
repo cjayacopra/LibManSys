@@ -22,6 +22,8 @@ import javax.swing.UIManager;
 import java.awt.GridBagLayout;
 import java.awt.GridBagConstraints;
 import java.awt.Insets;
+import javax.swing.JSeparator;
+import java.awt.Color;
 
 
 public class Login extends JFrame {
@@ -81,10 +83,10 @@ public class Login extends JFrame {
 		gbc_panel.gridy = 0;
 		contentPane.add(panel, gbc_panel);
 		GridBagLayout gbl_panel = new GridBagLayout();
-		gbl_panel.columnWidths = new int[]{261, 216, 0};
+		gbl_panel.columnWidths = new int[]{248, 234, 0};
 		gbl_panel.rowHeights = new int[]{80, 0};
 		gbl_panel.columnWeights = new double[]{0.0, 0.0, Double.MIN_VALUE};
-		gbl_panel.rowWeights = new double[]{0.0, Double.MIN_VALUE};
+		gbl_panel.rowWeights = new double[]{1.0, Double.MIN_VALUE};
 		panel.setLayout(gbl_panel);
 		
 		JPanel panel_1 = new JPanel();
@@ -95,8 +97,8 @@ public class Login extends JFrame {
 		gbc_panel_1.gridy = 0;
 		panel.add(panel_1, gbc_panel_1);
 		GridBagLayout gbl_panel_1 = new GridBagLayout();
-		gbl_panel_1.columnWidths = new int[]{261, 0};
-		gbl_panel_1.rowHeights = new int[]{80, 0};
+		gbl_panel_1.columnWidths = new int[]{216, 0};
+		gbl_panel_1.rowHeights = new int[]{300, 0};
 		gbl_panel_1.columnWeights = new double[]{1.0, Double.MIN_VALUE};
 		gbl_panel_1.rowWeights = new double[]{1.0, Double.MIN_VALUE};
 		panel_1.setLayout(gbl_panel_1);
@@ -109,15 +111,24 @@ public class Login extends JFrame {
 		
 		JPanel panel_2 = new JPanel();
 		GridBagConstraints gbc_panel_2 = new GridBagConstraints();
+		gbc_panel_2.fill = GridBagConstraints.VERTICAL;
 		gbc_panel_2.gridx = 1;
 		gbc_panel_2.gridy = 0;
 		panel.add(panel_2, gbc_panel_2);
 		GridBagLayout gbl_panel_2 = new GridBagLayout();
 		gbl_panel_2.columnWidths = new int[]{216, 0};
-		gbl_panel_2.rowHeights = new int[]{0, 16, 26, 16, 26, 0, 0, 0, 0, 0};
-		gbl_panel_2.columnWeights = new double[]{0.0, Double.MIN_VALUE};
-		gbl_panel_2.rowWeights = new double[]{0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, Double.MIN_VALUE};
+		gbl_panel_2.rowHeights = new int[]{1, 36, 1, 16, 1, 26, 1, 16, 26, 1, 26, 1, 0};
+		gbl_panel_2.columnWeights = new double[]{1.0, Double.MIN_VALUE};
+		gbl_panel_2.rowWeights = new double[]{1.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0, Double.MIN_VALUE};
 		panel_2.setLayout(gbl_panel_2);
+		
+		JSeparator separator = new JSeparator();
+		GridBagConstraints gbc_separator = new GridBagConstraints();
+		gbc_separator.fill = GridBagConstraints.VERTICAL;
+		gbc_separator.insets = new Insets(0, 0, 5, 0);
+		gbc_separator.gridx = 0;
+		gbc_separator.gridy = 0;
+		panel_2.add(separator, gbc_separator);
 		
 		JLabel lblLibManSys = new JLabel("<html><center>LIBRARY MANAGEMENT<br>SYSTEM</center></html>");
 		GridBagConstraints gbc_lblLibManSys = new GridBagConstraints();
@@ -125,10 +136,18 @@ public class Login extends JFrame {
 		gbc_lblLibManSys.fill = GridBagConstraints.HORIZONTAL;
 		gbc_lblLibManSys.insets = new Insets(0, 0, 5, 0);
 		gbc_lblLibManSys.gridx = 0;
-		gbc_lblLibManSys.gridy = 0;
+		gbc_lblLibManSys.gridy = 1;
 		panel_2.add(lblLibManSys, gbc_lblLibManSys);
 		lblLibManSys.setHorizontalAlignment(SwingConstants.CENTER);
 		lblLibManSys.setFont(new Font("Dialog", Font.BOLD, 15));
+		
+		JSeparator separator_1 = new JSeparator();
+		GridBagConstraints gbc_separator_1 = new GridBagConstraints();
+		gbc_separator_1.fill = GridBagConstraints.VERTICAL;
+		gbc_separator_1.insets = new Insets(0, 0, 5, 0);
+		gbc_separator_1.gridx = 0;
+		gbc_separator_1.gridy = 2;
+		panel_2.add(separator_1, gbc_separator_1);
 		
 		
 		JLabel lblEmail = new JLabel("Email");
@@ -137,19 +156,29 @@ public class Login extends JFrame {
 		gbc_lblEmail.fill = GridBagConstraints.HORIZONTAL;
 		gbc_lblEmail.insets = new Insets(0, 0, 5, 0);
 		gbc_lblEmail.gridx = 0;
-		gbc_lblEmail.gridy = 2;
+		gbc_lblEmail.gridy = 3;
 		panel_2.add(lblEmail, gbc_lblEmail);
 		lblEmail.setHorizontalAlignment(SwingConstants.CENTER);
 		
 		txtEmail = new JTextField();
+		txtEmail.setHorizontalAlignment(SwingConstants.CENTER);
 		GridBagConstraints gbc_txtEmail = new GridBagConstraints();
 		gbc_txtEmail.anchor = GridBagConstraints.NORTH;
 		gbc_txtEmail.fill = GridBagConstraints.HORIZONTAL;
 		gbc_txtEmail.insets = new Insets(0, 0, 5, 0);
 		gbc_txtEmail.gridx = 0;
-		gbc_txtEmail.gridy = 3;
+		gbc_txtEmail.gridy = 5;
 		panel_2.add(txtEmail, gbc_txtEmail);
 		txtEmail.setColumns(10);
+		
+		JSeparator separator_4 = new JSeparator();
+		separator_4.setForeground(new Color(96, 98, 101));
+		GridBagConstraints gbc_separator_4 = new GridBagConstraints();
+		gbc_separator_4.fill = GridBagConstraints.VERTICAL;
+		gbc_separator_4.insets = new Insets(0, 0, 5, 0);
+		gbc_separator_4.gridx = 0;
+		gbc_separator_4.gridy = 6;
+		panel_2.add(separator_4, gbc_separator_4);
 		
 		JLabel lblPassword = new JLabel("Password");
 		GridBagConstraints gbc_lblPassword = new GridBagConstraints();
@@ -157,32 +186,47 @@ public class Login extends JFrame {
 		gbc_lblPassword.fill = GridBagConstraints.HORIZONTAL;
 		gbc_lblPassword.insets = new Insets(0, 0, 5, 0);
 		gbc_lblPassword.gridx = 0;
-		gbc_lblPassword.gridy = 4;
+		gbc_lblPassword.gridy = 7;
 		panel_2.add(lblPassword, gbc_lblPassword);
 		lblPassword.setHorizontalAlignment(SwingConstants.CENTER);
 		
 		pwdPassword = new JPasswordField();
+		pwdPassword.setHorizontalAlignment(SwingConstants.CENTER);
 		GridBagConstraints gbc_pwdPassword = new GridBagConstraints();
 		gbc_pwdPassword.anchor = GridBagConstraints.NORTH;
 		gbc_pwdPassword.fill = GridBagConstraints.HORIZONTAL;
 		gbc_pwdPassword.insets = new Insets(0, 0, 5, 0);
 		gbc_pwdPassword.gridx = 0;
-		gbc_pwdPassword.gridy = 5;
+		gbc_pwdPassword.gridy = 8;
 		panel_2.add(pwdPassword, gbc_pwdPassword);
+		
+		JSeparator separator_3 = new JSeparator();
+		GridBagConstraints gbc_separator_3 = new GridBagConstraints();
+		gbc_separator_3.fill = GridBagConstraints.VERTICAL;
+		gbc_separator_3.insets = new Insets(0, 0, 5, 0);
+		gbc_separator_3.gridx = 0;
+		gbc_separator_3.gridy = 9;
+		panel_2.add(separator_3, gbc_separator_3);
 		
 		JButton btnLogin = new JButton("Login");
 		GridBagConstraints gbc_btnLogin = new GridBagConstraints();
-		gbc_btnLogin.gridheight = 2;
-		gbc_btnLogin.insets = new Insets(0, 0, 5, 0);
 		gbc_btnLogin.fill = GridBagConstraints.BOTH;
+		gbc_btnLogin.insets = new Insets(0, 0, 5, 0);
 		gbc_btnLogin.gridx = 0;
-		gbc_btnLogin.gridy = 7;
+		gbc_btnLogin.gridy = 10;
 		panel_2.add(btnLogin, gbc_btnLogin);
 		btnLogin.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				login(new LibraryAccount());
 			}
 		});
+		
+		JSeparator separator_2 = new JSeparator();
+		GridBagConstraints gbc_separator_2 = new GridBagConstraints();
+		gbc_separator_2.fill = GridBagConstraints.VERTICAL;
+		gbc_separator_2.gridx = 0;
+		gbc_separator_2.gridy = 11;
+		panel_2.add(separator_2, gbc_separator_2);
 		
 		
 
