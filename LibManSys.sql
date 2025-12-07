@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost
--- Generation Time: Dec 04, 2025 at 09:04 AM
+-- Generation Time: Dec 05, 2025 at 01:56 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -32,7 +32,7 @@ CREATE TABLE `account` (
   `first_name` varchar(25) NOT NULL,
   `last_name` varchar(25) NOT NULL,
   `age` int(10) NOT NULL,
-  `sex` varchar(10) NOT NULL,
+  `sex` enum('MALE','FEMALE') NOT NULL,
   `contact_number` varchar(11) NOT NULL,
   `email` varchar(25) NOT NULL,
   `address` varchar(25) NOT NULL,
@@ -45,7 +45,8 @@ CREATE TABLE `account` (
 --
 
 INSERT INTO `account` (`account_id`, `first_name`, `last_name`, `age`, `sex`, `contact_number`, `email`, `address`, `role`, `password`) VALUES
-(1, 'CJay', 'Acopra', 25, 'Male', '09123456789', 'cjay@email.com', 'Legazpi City', 'librarian', 'abc_123');
+(1, 'CJay', 'Acopra', 25, 'MALE', '09123456789', 'cjay@email.com', 'Legazpi City', 'librarian', 'abc_123'),
+(2, 'Zoe', 'Dela Torre', 25, 'FEMALE', '09123456789', 'zoe@email.com', '123 St. Daraga, Albay', 'reader', 'abc_123');
 
 -- --------------------------------------------------------
 
@@ -85,7 +86,8 @@ CREATE TABLE `transactions` (
 -- Indexes for table `account`
 --
 ALTER TABLE `account`
-  ADD PRIMARY KEY (`account_id`);
+  ADD PRIMARY KEY (`account_id`),
+  ADD UNIQUE KEY `email` (`email`);
 
 --
 -- Indexes for table `books`
@@ -109,7 +111,7 @@ ALTER TABLE `transactions`
 -- AUTO_INCREMENT for table `account`
 --
 ALTER TABLE `account`
-  MODIFY `account_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `account_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT for table `books`
