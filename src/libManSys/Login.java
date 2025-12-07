@@ -153,5 +153,53 @@ public class Login extends JFrame {
             JOptionPane.showMessageDialog(this, "An error occurred during login.", "Login Error", JOptionPane.ERROR_MESSAGE);
         }
     }
+	}
+	
+	public void login(LibraryAccount account) {
+		
+		String email = String.valueOf(txtEmail.getText());
+		String password = String.valueOf(pwdPassword.getPassword());
+		
+		account.setEmail(email);
+		
+		try {
+			
+			dbCon.connect();
+			String select = "SELECT * FROM account WHERE email = ?";
+			PreparedStatement prep = dbCon.con.prepareStatement(select);
+			prep.setString(1, email);
+			
+			ResultSet result = prep.executeQuery();
+			
+			if(result.next()){
+				account.setEmail(result.getString("email"));
+				account.setPassword(result.getString("password"));
+				account.setRole(result.getString("role")); // Set the role
+				if(password.equals(account.getPassword())) {
+					
+					if ((account.getRole().equals("librarian"))) {
+						// TODO: Replace this with the librarian dashboard
+						JOptionPane.showMessageDialog(this, "Login successful! Your role is: librarian","Login successful", JOptionPane.INFORMATION_MESSAGE);
+					} else {
+						// Redirect to reader dashboard
+						Reader_dashboard readerDashboard = new Reader_dashboard(account.getEmail());
+						readerDashboard.setVisible(true);
+						dispose();
+					}
+				}else {
+					JOptionPane.showMessageDialog(this, "Login Failed! Incorrect Password","Login Failed. Incorrect Password", JOptionPane.ERROR_MESSAGE);
+				}
+			} else {
+				JOptionPane.showMessageDialog(this, "Login Failed! Email not found.","Login Failed. Incorrect Email.", JOptionPane.ERROR_MESSAGE);
+			}
+			
+			
+			
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		
+		
+	}
 }
 
