@@ -258,8 +258,10 @@ public class Login extends JFrame {
 						// TODO: Replace this with the librarian dashboard
 						JOptionPane.showMessageDialog(this, "Login successful! Your role is: librarian","Login successful", JOptionPane.INFORMATION_MESSAGE);
 					} else {
-						// TODO: Replace this with the reader dashboard
-						JOptionPane.showMessageDialog(this, "Login successful! Your role is: reader" ,"Login successful", JOptionPane.INFORMATION_MESSAGE);
+						// Redirect to reader dashboard
+						Reader_dashboard readerDashboard = new Reader_dashboard(account.getEmail());
+						readerDashboard.setVisible(true);
+						dispose();
 					}
 				}else {
 					JOptionPane.showMessageDialog(this, "Login Failed! Incorrect Password","Login Failed. Incorrect Password", JOptionPane.ERROR_MESSAGE);
