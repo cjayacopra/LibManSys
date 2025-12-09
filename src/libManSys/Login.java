@@ -61,8 +61,7 @@ public class Login extends JFrame {
         contentPane.setLayout(null);
         setContentPane(contentPane);
 
-        // Logo Panel
-        @SuppressWarnings("serial")
+
         JPanel logoPanel = new JPanel() {
             @Override
             protected void paintComponent(Graphics g) {
@@ -136,11 +135,17 @@ public class Login extends JFrame {
 
                 if (password.equals(account.getPassword())) {
                     if ("librarian".equals(account.getRole())) {
-                        new LibDash().getFrame().setVisible(true);
+                        String firstName = result.getString("first_name");
+                        String lastName = result.getString("last_name");
+                        String fullName = firstName + " " + lastName;
+                    	// Redirect to librarian dashboard
+                        new LibDash(fullName).getFrame().setVisible(true);
                         this.dispose();
                     } else {
-                        // TODO: Replace this with the reader dashboard
-                        JOptionPane.showMessageDialog(this, "Login successful! Your role is: reader", "Login successful", JOptionPane.INFORMATION_MESSAGE);
+						// Redirect to reader dashboard
+						Reader_dashboard readerDashboard = new Reader_dashboard(account.getEmail());
+						readerDashboard.setVisible(true);
+						this.dispose();
                     }
                 } else {
                     JOptionPane.showMessageDialog(this, "Incorrect password.", "Login Failed", JOptionPane.ERROR_MESSAGE);
@@ -155,51 +160,3 @@ public class Login extends JFrame {
     }
 	}
 	
-	public void login(LibraryAccount account) {
-		
-		String email = String.valueOf(txtEmail.getText());
-		String password = String.valueOf(pwdPassword.getPassword());
-		
-		account.setEmail(email);
-		
-		try {
-			
-			dbCon.connect();
-			String select = "SELECT * FROM account WHERE email = ?";
-			PreparedStatement prep = dbCon.con.prepareStatement(select);
-			prep.setString(1, email);
-			
-			ResultSet result = prep.executeQuery();
-			
-			if(result.next()){
-				account.setEmail(result.getString("email"));
-				account.setPassword(result.getString("password"));
-				account.setRole(result.getString("role")); // Set the role
-				if(password.equals(account.getPassword())) {
-					
-					if ((account.getRole().equals("librarian"))) {
-						// TODO: Replace this with the librarian dashboard
-						JOptionPane.showMessageDialog(this, "Login successful! Your role is: librarian","Login successful", JOptionPane.INFORMATION_MESSAGE);
-					} else {
-						// Redirect to reader dashboard
-						Reader_dashboard readerDashboard = new Reader_dashboard(account.getEmail());
-						readerDashboard.setVisible(true);
-						dispose();
-					}
-				}else {
-					JOptionPane.showMessageDialog(this, "Login Failed! Incorrect Password","Login Failed. Incorrect Password", JOptionPane.ERROR_MESSAGE);
-				}
-			} else {
-				JOptionPane.showMessageDialog(this, "Login Failed! Email not found.","Login Failed. Incorrect Email.", JOptionPane.ERROR_MESSAGE);
-			}
-			
-			
-			
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		
-		
-	}
-}
-
