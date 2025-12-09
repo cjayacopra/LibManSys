@@ -439,7 +439,20 @@ public class LibDash {
 
         JLabel nameLabel = new JLabel("Logged in as: " + loggedInUserName);
         nameLabel.setFont(new Font("Arial", Font.PLAIN, 18));
+        nameLabel.setAlignmentX(JComponent.CENTER_ALIGNMENT);
         detailsPanel.add(nameLabel);
+        
+        detailsPanel.add(Box.createRigidArea(new Dimension(0, 20)));
+
+        JButton logoutButton = new JButton("Logout");
+        logoutButton.setFont(new Font("Arial", Font.BOLD, 16));
+        logoutButton.setAlignmentX(JComponent.CENTER_ALIGNMENT);
+        logoutButton.addActionListener(e -> {
+            frame.dispose();
+            Login loginFrame = new Login();
+            loginFrame.setVisible(true);
+        });
+        detailsPanel.add(logoutButton);
         
         detailsPanel.add(Box.createVerticalGlue());
 
