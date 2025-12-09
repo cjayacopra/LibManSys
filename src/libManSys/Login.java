@@ -134,7 +134,11 @@ public class Login extends JFrame {
 
                 if (password.equals(account.getPassword())) {
                     if ("librarian".equals(account.getRole())) {
-                        new LibDash().getFrame().setVisible(true);
+                        String firstName = result.getString("first_name");
+                        String lastName = result.getString("last_name");
+                        String fullName = firstName + " " + lastName;
+                    	// Redirect to librarian dashboard
+                        new LibDash(fullName).getFrame().setVisible(true);
                         this.dispose();
                     } else {
 						// Redirect to reader dashboard
