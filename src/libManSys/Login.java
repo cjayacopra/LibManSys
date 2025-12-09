@@ -61,7 +61,6 @@ public class Login extends JFrame {
         contentPane.setLayout(null);
         setContentPane(contentPane);
 
-
         JPanel logoPanel = new JPanel() {
             @Override
             protected void paintComponent(Graphics g) {
@@ -145,7 +144,7 @@ public class Login extends JFrame {
 						// Redirect to reader dashboard
 						Reader_dashboard readerDashboard = new Reader_dashboard(account.getEmail());
 						readerDashboard.setVisible(true);
-						this.dispose();
+						dispose();
                     }
                 } else {
                     JOptionPane.showMessageDialog(this, "Incorrect password.", "Login Failed", JOptionPane.ERROR_MESSAGE);
