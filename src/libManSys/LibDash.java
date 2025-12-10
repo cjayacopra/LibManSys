@@ -11,6 +11,8 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 // Removed javax.imageio.ImageIO;
+import java.awt.Image;
+import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -73,6 +75,14 @@ public class LibDash {
         frame.setBounds(100, 100, 1200, 700);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setLocationRelativeTo(null);
+        // Set application icon
+        try {
+            Image icon = new ImageIcon(getClass().getResource("/assets/LibManSys_Icon.png")).getImage();
+            frame.setIconImage(icon);
+        } catch (Exception e) {
+            System.err.println("Error loading icon: " + e.getMessage());
+            e.printStackTrace();
+        }
         frame.getContentPane().setLayout(null); // Using null layout for absolute positioning
 
         // Side Panel (no logo, just title)

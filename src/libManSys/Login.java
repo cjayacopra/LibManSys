@@ -11,6 +11,8 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 
 import javax.imageio.ImageIO;
+import java.awt.Image;
+import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -21,7 +23,7 @@ import javax.swing.JTextField;
 import javax.swing.SwingConstants;
 import javax.swing.UIManager;
 
-import com.formdev.flatlaf.FlatLightLaf;
+import com.formdev.flatlaf.*;
 
 public class Login extends JFrame {
 
@@ -47,8 +49,8 @@ public class Login extends JFrame {
 
     public Login() {
         try {
-            UIManager.setLookAndFeel(new FlatLightLaf());
-            logoImage = ImageIO.read(new File("assets/LogoWhite.png"));
+            UIManager.setLookAndFeel(new FlatDarkLaf());
+            logoImage = ImageIO.read(new File("assets/LibManSys_Logo.png"));
         } catch (Exception ex) {
             System.err.println("Failed to initialize LaF or load logo.");
         }
@@ -56,6 +58,15 @@ public class Login extends JFrame {
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setSize(900, 600);
         setLocationRelativeTo(null);
+        
+        // Set application icon
+        try {
+            Image icon = new ImageIcon(getClass().getResource("/assets/LibManSys_Icon.png")).getImage();
+            setIconImage(icon);
+        } catch (Exception e) {
+            System.err.println("Error loading icon: " + e.getMessage());
+            e.printStackTrace();
+        }
         
         contentPane = new JPanel();
         contentPane.setLayout(null);
@@ -70,13 +81,13 @@ public class Login extends JFrame {
                 }
             }
         };
-        logoPanel.setBounds(0, 0, 450, 561); // Adjusted for window decorations
+        logoPanel.setBounds(0, 0, 450, 600); // Adjusted for window decorations
         contentPane.add(logoPanel);
 
         // Login Panel
         JPanel loginPanel = new JPanel();
         loginPanel.setLayout(null);
-        loginPanel.setBounds(450, 0, 434, 561); // Adjusted for window decorations
+        loginPanel.setBounds(450, 25, 434, 536); // Adjusted for window decorations
         contentPane.add(loginPanel);
 
         JLabel lblTitle = new JLabel("W E L C O M E");
