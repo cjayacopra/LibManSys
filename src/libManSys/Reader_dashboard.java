@@ -278,18 +278,21 @@ public class Reader_dashboard extends JFrame {
 	private void viewBorrowedBooks() {
 		try {
 			// Get all borrow transactions that haven't been returned yet
-			String sql = "SELECT t.book_id, t.book_name, b.book_author " +
-						 "FROM transactions t " +
-						 "JOIN books b ON t.book_id = b.book_id " +
-						 "WHERE t.account_id = ? AND t.transaction_type = 'borrow' " +
-						 "AND t.book_id NOT IN (" +
-						 "  SELECT book_id FROM transactions " +
-						 "  WHERE account_id = ? AND transaction_type = 'return'" +
-						 ")";
+			String sql = 
+				    "SELECT t.book_id, t.book_name, b.book_author " +
+				    "FROM transactions t " +
+				    "JOIN books b ON t.book_id = b.book_id " +
+				    "WHERE t.account_id = ? AND t.transaction_type = 'borrow' " +
+				    "AND NOT EXISTS ( " +
+				    "    SELECT 1 FROM transactions t2 " +
+				    "    WHERE t2.account_id = t.account_id " +
+				    "    AND t2.book_id = t.book_id " +
+				    "    AND t2.transaction_type = 'return' " +
+				    "    AND t2.transaction_id > t.transaction_id" +
+				    ")";
 			
 			PreparedStatement pst = conn.prepareStatement(sql);
 			pst.setInt(1, accountId);
-			pst.setInt(2, accountId);
 			ResultSet rs = pst.executeQuery();
 			
 			StringBuilder borrowedList = new StringBuilder("Your Borrowed Books:\n\n");
@@ -442,17 +445,19 @@ public class Reader_dashboard extends JFrame {
 			int bookId = Integer.parseInt(bookIdStr);
 			
 			// Check if user has borrowed this book and hasn't returned it yet
-			String checkSql = "SELECT book_name FROM transactions " +
-							  "WHERE account_id = ? AND book_id = ? AND transaction_type = 'borrow' " +
-							  "AND book_id NOT IN (" +
-							  "  SELECT book_id FROM transactions " +
-							  "  WHERE account_id = ? AND transaction_type = 'return'" +
-							  ")";
-			PreparedStatement checkPst = conn.prepareStatement(checkSql);
-			checkPst.setInt(1, accountId);
-			checkPst.setInt(2, bookId);
-			checkPst.setInt(3, accountId);
-			ResultSet rs = checkPst.executeQuery();
+			String checkSql = "SELECT book_name FROM transactions t " +
+				    "WHERE account_id = ? AND book_id = ? AND transaction_type = 'borrow' " +
+				    "AND NOT EXISTS ( " +
+				    "  SELECT 1 FROM transactions t2 " +
+				    "  WHERE t2.account_id = t.account_id " +
+				    "  AND t2.book_id = t.book_id " +
+				    "  AND t2.transaction_type = 'return' " +
+				    "  AND t2.transaction_id > t.transaction_id " +
+				    ")";
+				PreparedStatement checkPst = conn.prepareStatement(checkSql);
+				checkPst.setInt(1, accountId);
+				checkPst.setInt(2, bookId);
+				ResultSet rs = checkPst.executeQuery();
 			
 			if (!rs.next()) {
 				JOptionPane.showMessageDialog(this,
