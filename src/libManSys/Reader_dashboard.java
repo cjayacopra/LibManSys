@@ -1,5 +1,7 @@
 package libManSys;
 import java.awt.EventQueue;
+import java.awt.Image;
+import javax.swing.ImageIcon;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
@@ -92,6 +94,14 @@ public class Reader_dashboard extends JFrame {
 		
 		setTitle("Reader Dashboard - Library Management System");
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		// Set application icon
+		try {
+		    Image icon = new ImageIcon(getClass().getResource("/assets/LibManSys_Icon.png")).getImage();
+		    setIconImage(icon);
+		} catch (Exception e) {
+		    System.err.println("Error loading icon: " + e.getMessage());
+		    e.printStackTrace();
+		}
 		setBounds(100, 100, 900, 600);
 		contentPane = new JPanel();
 		contentPane.setBackground(new Color(240, 248, 255));
@@ -132,9 +142,10 @@ public class Reader_dashboard extends JFrame {
 		// Search Books Button
 		JButton btnSearchBooks = new JButton("Search Books");
 		btnSearchBooks.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				searchBooks();
-			}
+		    public void actionPerformed(ActionEvent e) {
+		    	ReaderSearch searchWindow = new ReaderSearch(email);
+		    	searchWindow.setVisible(true);
+		    }
 		});
 		btnSearchBooks.setFont(new Font("Tahoma", Font.BOLD, 16));
 		btnSearchBooks.setBackground(new Color(100, 149, 237));
