@@ -132,9 +132,10 @@ public class Reader_dashboard extends JFrame {
 		// Search Books Button
 		JButton btnSearchBooks = new JButton("Search Books");
 		btnSearchBooks.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				searchBooks();
-			}
+		    public void actionPerformed(ActionEvent e) {
+		    	ReaderSearch searchWindow = new ReaderSearch(email);
+		    	searchWindow.setVisible(true);
+		    }
 		});
 		btnSearchBooks.setFont(new Font("Tahoma", Font.BOLD, 16));
 		btnSearchBooks.setBackground(new Color(100, 149, 237));
