@@ -5,12 +5,17 @@ import javax.swing.ImageIcon;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
+
+import com.formdev.flatlaf.FlatIntelliJLaf;
+
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JButton;
 import java.awt.Font;
 import java.awt.Color;
 import javax.swing.SwingConstants;
+import javax.swing.UIManager;
+
 import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
 import java.sql.*;
@@ -32,6 +37,7 @@ public class Reader_dashboard extends JFrame {
 			public void run() {
 				try {
 					// For testing purposes - pass email only
+					UIManager.setLookAndFeel(new FlatIntelliJLaf());
 					Reader_dashboard frame = new Reader_dashboard("otelo.nobleza@example.com");
 					frame.setVisible(true);
 				} catch (Exception e) {
@@ -112,7 +118,7 @@ public class Reader_dashboard extends JFrame {
 		// Header Panel
 		JPanel headerPanel = new JPanel();
 		headerPanel.setBackground(new Color(70, 130, 180));
-		headerPanel.setBounds(0, 0, 884, 80);
+		headerPanel.setBounds(0, 0, 900, 80);
 		contentPane.add(headerPanel);
 		headerPanel.setLayout(null);
 		
@@ -135,7 +141,7 @@ public class Reader_dashboard extends JFrame {
 		// Main Content Area
 		JPanel mainPanel = new JPanel();
 		mainPanel.setBackground(new Color(240, 248, 255));
-		mainPanel.setBounds(10, 91, 864, 459);
+		mainPanel.setBounds(2, 91, 897, 459);
 		contentPane.add(mainPanel);
 		mainPanel.setLayout(null);
 		

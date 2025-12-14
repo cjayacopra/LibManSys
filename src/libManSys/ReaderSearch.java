@@ -3,6 +3,9 @@ package libManSys;
 import java.awt.EventQueue;
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
+
+import com.formdev.flatlaf.FlatIntelliJLaf;
+
 import java.awt.*;
 import java.awt.event.*;
 import java.sql.*;
@@ -21,6 +24,7 @@ public class ReaderSearch extends JFrame {
     public static void main(String[] args) {
         EventQueue.invokeLater(() -> {
             try {
+            	UIManager.setLookAndFeel(new FlatIntelliJLaf());
                 ReaderSearch frame = new ReaderSearch("otelo.nobleza@example.com");
                 frame.setVisible(true);
             } catch (Exception e) {
@@ -86,7 +90,7 @@ public class ReaderSearch extends JFrame {
         // Header Panel
         JPanel headerPanel = new JPanel();
         headerPanel.setBackground(new Color(70, 130, 180));
-        headerPanel.setBounds(0, 0, 884, 80);
+        headerPanel.setBounds(0, 0, 901, 80);
         contentPane.add(headerPanel);
         headerPanel.setLayout(null);
 
@@ -107,7 +111,7 @@ public class ReaderSearch extends JFrame {
         // Main Content Area
         JPanel mainPanel = new JPanel();
         mainPanel.setBackground(new Color(240, 248, 255));
-        mainPanel.setBounds(10, 91, 864, 459);
+        mainPanel.setBounds(0, 91, 900, 459);
         contentPane.add(mainPanel);
         mainPanel.setLayout(null);
 
