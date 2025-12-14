@@ -49,7 +49,7 @@ public class Login extends JFrame {
 
     public Login() {
         try {
-            UIManager.setLookAndFeel(new FlatDarkLaf());
+            UIManager.setLookAndFeel(new FlatLightLaf());
             logoImage = ImageIO.read(new File("assets/LibManSys_Logo.png"));
         } catch (Exception ex) {
             System.err.println("Failed to initialize LaF or load logo.");
@@ -87,7 +87,7 @@ public class Login extends JFrame {
         // Login Panel
         JPanel loginPanel = new JPanel();
         loginPanel.setLayout(null);
-        loginPanel.setBounds(450, 25, 434, 536); // Adjusted for window decorations
+        loginPanel.setBounds(450, 0, 434, 600); // Adjusted for window decorations
         contentPane.add(loginPanel);
 
         JLabel lblTitle = new JLabel("W E L C O M E");
@@ -149,7 +149,7 @@ public class Login extends JFrame {
                         String lastName = result.getString("last_name");
                         String fullName = firstName + " " + lastName;
                     	// Redirect to librarian dashboard
-                        new LibDash(fullName).getFrame().setVisible(true);
+                        new LibDash(fullName);
                         this.dispose();
                     } else {
 						// Redirect to reader dashboard
