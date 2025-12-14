@@ -38,6 +38,7 @@ public class Login extends JFrame {
         EventQueue.invokeLater(new Runnable() {
             public void run() {
                 try {
+                	UIManager.setLookAndFeel(new FlatIntelliJLaf());
                     Login frame = new Login();
                     frame.setVisible(true);
                 } catch (Exception e) {
@@ -49,10 +50,9 @@ public class Login extends JFrame {
 
     public Login() {
         try {
-            UIManager.setLookAndFeel(new FlatLightLaf());
             logoImage = ImageIO.read(new File("assets/LibManSys_Logo.png"));
         } catch (Exception ex) {
-            System.err.println("Failed to initialize LaF or load logo.");
+        	ex.printStackTrace();
         }
         setResizable(false);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
