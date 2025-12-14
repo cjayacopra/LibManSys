@@ -156,9 +156,10 @@ public class Reader_dashboard extends JFrame {
 		// View Borrowed Books Button
 		JButton btnBorrowedBooks = new JButton("My Borrowed Books");
 		btnBorrowedBooks.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				viewBorrowedBooks();
-			}
+		    public void actionPerformed(ActionEvent e) {
+		        BorrowedBooks borrowedBooksFrame = new BorrowedBooks(conn, accountId);
+		        borrowedBooksFrame.setVisible(true);
+		    }
 		});
 		btnBorrowedBooks.setFont(new Font("Tahoma", Font.BOLD, 16));
 		btnBorrowedBooks.setBackground(new Color(60, 179, 113));
@@ -169,9 +170,10 @@ public class Reader_dashboard extends JFrame {
 		// Borrow Book Button
 		JButton btnBorrowBook = new JButton("Borrow a Book");
 		btnBorrowBook.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				borrowBook();
-			}
+		    public void actionPerformed(ActionEvent e) {
+		        BookBorrow borrowFrame = new BookBorrow(conn, accountId, email);
+		        borrowFrame.setVisible(true);
+		    }
 		});
 		btnBorrowBook.setFont(new Font("Tahoma", Font.BOLD, 16));
 		btnBorrowBook.setBackground(new Color(255, 165, 0));
@@ -236,44 +238,7 @@ public class Reader_dashboard extends JFrame {
 	}
 	
 	// Method to search for books
-	private void searchBooks() {
-		try {
-			String sql = "SELECT * FROM books";
-			PreparedStatement pst = conn.prepareStatement(sql);
-			ResultSet rs = pst.executeQuery();
-			
-			StringBuilder bookList = new StringBuilder("Available Books:\n\n");
-			int count = 0;
-			
-			while (rs.next()) {
-				count++;
-				bookList.append("ID: ").append(rs.getInt("book_id"))
-					.append(" | ").append(rs.getString("book_name"))
-					.append("\nAuthor: ").append(rs.getString("book_author"))
-					.append(" | Category: ").append(rs.getString("book_category"))
-					.append("\n\n");
-			}
-			
-			if (count == 0) {
-				JOptionPane.showMessageDialog(this,
-					"No books available in the library.",
-					"Search Books",
-					JOptionPane.INFORMATION_MESSAGE);
-			} else {
-				JOptionPane.showMessageDialog(this, bookList.toString(),
-					"Search Books", JOptionPane.INFORMATION_MESSAGE);
-			}
-			
-			rs.close();
-			pst.close();
-		} catch (Exception e) {
-			JOptionPane.showMessageDialog(this,
-				"Error searching books: " + e.getMessage(),
-				"Error",
-				JOptionPane.ERROR_MESSAGE);
-			e.printStackTrace();
-		}
-	}
+	
 	
 	// Method to view borrowed books
 	private void viewBorrowedBooks() {
@@ -322,109 +287,6 @@ public class Reader_dashboard extends JFrame {
 		} catch (Exception e) {
 			JOptionPane.showMessageDialog(this,
 				"Error retrieving borrowed books: " + e.getMessage(),
-				"Error",
-				JOptionPane.ERROR_MESSAGE);
-			e.printStackTrace();
-		}
-	}
-	
-	// Method to borrow a book
-	private void borrowBook() {
-		try {
-			String bookIdStr = JOptionPane.showInputDialog(this,
-				"Enter Book ID to borrow:",
-				"Borrow Book",
-				JOptionPane.QUESTION_MESSAGE);
-			
-			if (bookIdStr == null || bookIdStr.trim().isEmpty()) {
-				return;
-			}
-			
-			int bookId = Integer.parseInt(bookIdStr);
-			
-			// Check if book exists
-			String checkSql = "SELECT book_name FROM books WHERE book_id = ?";
-			PreparedStatement checkPst = conn.prepareStatement(checkSql);
-			checkPst.setInt(1, bookId);
-			ResultSet rs = checkPst.executeQuery();
-			
-			if (!rs.next()) {
-				JOptionPane.showMessageDialog(this,
-					"Book ID not found!",
-					"Error",
-					JOptionPane.ERROR_MESSAGE);
-				rs.close();
-				checkPst.close();
-				return;
-			}
-			
-			String bookName = rs.getString("book_name");
-			rs.close();
-			checkPst.close();
-			
-			// Check if already borrowed and not returned
-			String alreadyBorrowedSql = "SELECT book_id FROM transactions " +
-										"WHERE account_id = ? AND book_id = ? AND transaction_type = 'borrow' " +
-										"AND book_id NOT IN (" +
-										"  SELECT book_id FROM transactions " +
-										"  WHERE account_id = ? AND transaction_type = 'return'" +
-										")";
-			PreparedStatement alreadyPst = conn.prepareStatement(alreadyBorrowedSql);
-			alreadyPst.setInt(1, accountId);
-			alreadyPst.setInt(2, bookId);
-			alreadyPst.setInt(3, accountId);
-			ResultSet alreadyRs = alreadyPst.executeQuery();
-			
-			if (alreadyRs.next()) {
-				JOptionPane.showMessageDialog(this,
-					"You have already borrowed this book!\nPlease return it first before borrowing again.",
-					"Error",
-					JOptionPane.ERROR_MESSAGE);
-				alreadyRs.close();
-				alreadyPst.close();
-				return;
-			}
-			alreadyRs.close();
-			alreadyPst.close();
-			
-			// Get contact number from account
-			String contactSql = "SELECT contact_number FROM account WHERE account_id = ?";
-			PreparedStatement contactPst = conn.prepareStatement(contactSql);
-			contactPst.setInt(1, accountId);
-			ResultSet contactRs = contactPst.executeQuery();
-			contactRs.next();
-			String contactNumber = contactRs.getString("contact_number");
-			contactRs.close();
-			contactPst.close();
-			
-			// Insert borrow transaction
-			String sql = "INSERT INTO transactions (transaction_type, book_id, book_name, account_id, contact_number, email) " +
-						 "VALUES ('borrow', ?, ?, ?, ?, ?)";
-			PreparedStatement pst = conn.prepareStatement(sql);
-			pst.setInt(1, bookId);
-			pst.setString(2, bookName);
-			pst.setInt(3, accountId);
-			pst.setString(4, contactNumber);
-			pst.setString(5, email);
-			
-			int result = pst.executeUpdate();
-			
-			if (result > 0) {
-				JOptionPane.showMessageDialog(this,
-					"Book borrowed successfully!\n\nBook: " + bookName,
-					"Success",
-					JOptionPane.INFORMATION_MESSAGE);
-			}
-			
-			pst.close();
-		} catch (NumberFormatException e) {
-			JOptionPane.showMessageDialog(this,
-				"Invalid Book ID! Please enter a number.",
-				"Error",
-				JOptionPane.ERROR_MESSAGE);
-		} catch (Exception e) {
-			JOptionPane.showMessageDialog(this,
-				"Error borrowing book: " + e.getMessage(),
 				"Error",
 				JOptionPane.ERROR_MESSAGE);
 			e.printStackTrace();
