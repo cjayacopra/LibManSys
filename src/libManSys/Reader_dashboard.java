@@ -435,28 +435,24 @@ public class Reader_dashboard extends JFrame {
         titleLabel.setFont(new Font("Arial", Font.BOLD, 24));
         panel.add(titleLabel, BorderLayout.NORTH);
 
-        JPanel contentPanel = new JPanel();
-        contentPanel.setLayout(new BoxLayout(contentPanel, BoxLayout.Y_AXIS));
-        contentPanel.setBorder(BorderFactory.createEmptyBorder(40, 100, 100, 100));
+        JPanel contentPanel = new JPanel(new BorderLayout(10, 10));
+        contentPanel.setBorder(BorderFactory.createEmptyBorder(20, 0, 0, 0));
 
-        JLabel instructionLabel = new JLabel("Enter the Book ID to return:");
-        instructionLabel.setFont(new Font("Arial", Font.PLAIN, 16));
-        instructionLabel.setAlignmentX(JComponent.CENTER_ALIGNMENT);
-        contentPanel.add(instructionLabel);
+        JButton openReturnButton = new JButton("Open Return Form");
+        openReturnButton.setFont(new Font("Arial", Font.BOLD, 18));
+        openReturnButton.addActionListener(e -> {
+            BookReturn returnFrame = new BookReturn(conn, accountId, email);
+            returnFrame.setVisible(true);
+        });
 
-        contentPanel.add(Box.createRigidArea(new Dimension(0, 20)));
-
-        JButton returnButton = new JButton("Return Book");
-        returnButton.setFont(new Font("Arial", Font.BOLD, 18));
-        returnButton.setAlignmentX(JComponent.CENTER_ALIGNMENT);
-        returnButton.addActionListener(e -> returnBook());
-        contentPanel.add(returnButton);
+        JPanel buttonPanel = new JPanel();
+        buttonPanel.add(openReturnButton);
+        contentPanel.add(buttonPanel, BorderLayout.NORTH);
 
         panel.add(contentPanel, BorderLayout.CENTER);
 
         return panel;
     }
-
     private void returnBook() {
         try {
             String bookIdStr = JOptionPane.showInputDialog(this,
