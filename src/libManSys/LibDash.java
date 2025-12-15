@@ -3,565 +3,1112 @@ package libManSys;
 import java.awt.BorderLayout;
 import java.awt.CardLayout;
 import java.awt.Color;
+import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.EventQueue;
 import java.awt.FlowLayout;
 import java.awt.Font;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
 import java.awt.GridLayout;
+import java.awt.Insets;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 
+import javax.swing.AbstractCellEditor;
 import javax.swing.BorderFactory;
-import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
+import javax.swing.JComboBox;
 import javax.swing.JComponent;
+import javax.swing.JDialog;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JPasswordField;
 import javax.swing.JScrollPane;
+import javax.swing.JSplitPane;
+import javax.swing.JTable;
 import javax.swing.JTextField;
+import javax.swing.RowFilter;
 import javax.swing.SwingConstants;
 import javax.swing.UIManager;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
+import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableCellEditor;
+import javax.swing.table.TableCellRenderer;
+import javax.swing.table.TableRowSorter;
 
-import com.formdev.flatlaf.FlatDarkLaf;
-import com.formdev.flatlaf.FlatLightLaf;
-import javax.swing.SwingUtilities;
-import java.awt.Component;
+import com.formdev.flatlaf.*;
 
 public class LibDash {
 
     private JFrame frame;
-    private DbConnect db;
     private JPanel mainPanel;
     private CardLayout cardLayout;
-
-    private JPanel booksContentPanel;
-    private JPanel readersContentPanel;
-    private JPanel librariansContentPanel;
     private JPanel sidebar;
-    private boolean isDarkMode = false;
-    private String loggedInUserName; // Added for profile section
+    private JButton activeMenuButton;
+    private Map<String, JButton> menuButtons = new HashMap<>();
+    private Map<String, TableRowSorter<DefaultTableModel>> sorters = new HashMap<>();
+    private String currentCard;
+    private DbConnect dbConnect;
 
     public static void main(String[] args) {
         EventQueue.invokeLater(() -> {
             try {
-                LibDash window = new LibDash("Admin User"); // Pass a dummy username
-                window.getFrame().setVisible(true);
+                UIManager.setLookAndFeel(new FlatIntelliJLaf());
+                LibDash window = new LibDash("Allison");
             } catch (Exception e) {
                 e.printStackTrace();
             }
         });
     }
 
-    public LibDash(String userName) { // Constructor now accepts username
-        this.loggedInUserName = userName;
-        db = new DbConnect();
-        db.connect();
-        initialize();
-        loadBooks("");
-        loadAccounts("reader", "");
-        loadAccounts("librarian", "");
+    public LibDash(String userName) {
+        dbConnect = new DbConnect();
+        dbConnect.connect();
+        initialize(userName);
     }
 
-    private void initialize() {
-        frame = new JFrame("Librarian Dashboard");
-        frame.setBounds(100, 100, 1200, 700);
+    private void initialize(String userName) {
+        frame = new JFrame("Library Management System");
+        frame.setBounds(100, 100, 1400, 800);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setLocationRelativeTo(null);
         frame.getContentPane().setLayout(new BorderLayout());
 
-        // Sidebar
         sidebar = createSidebar();
         frame.getContentPane().add(sidebar, BorderLayout.WEST);
 
-        // Main Panel
+        JPanel contentArea = new JPanel(new BorderLayout());
+        frame.getContentPane().add(contentArea, BorderLayout.CENTER);
+
+        JPanel topBar = createTopBar(userName);
+        contentArea.add(topBar, BorderLayout.NORTH);
+
         mainPanel = new JPanel();
         cardLayout = new CardLayout();
         mainPanel.setLayout(cardLayout);
+        contentArea.add(mainPanel, BorderLayout.CENTER);
 
-        JPanel dashboardPanel = createDashboardPanel();
-        mainPanel.add(dashboardPanel, "Dashboard");
+        mainPanel.add(createDashboardScreen(), "Dashboard");
+        mainPanel.add(createReadersScreen(), "Readers");
+        mainPanel.add(createLibrariansScreen(), "Librarians");
+        mainPanel.add(createBooksScreen(), "Books");
+        mainPanel.add(createCheckOutBooksScreen(), "Check-out Books");
 
-        JPanel booksPanel = createBooksPanel();
-        mainPanel.add(booksPanel, "Books");
-
-        JPanel readersPanel = createAccountsPanel("reader");
-        mainPanel.add(readersPanel, "Readers");
         
-        JPanel librariansPanel = createAccountsPanel("librarian");
-        mainPanel.add(librariansPanel, "Librarians");
-
-        JPanel profilePanel = createProfilePanel(); // New profile panel
-        mainPanel.add(profilePanel, "Profile"); // Add it as a card
-
-        frame.getContentPane().add(mainPanel, BorderLayout.CENTER);
-        updateTheme(); // Initialize theme
+        cardLayout.show(mainPanel, "Dashboard");
+        setActiveButton(menuButtons.get("Dashboard"));
+        frame.setVisible(true);
     }
 
     private JPanel createSidebar() {
-        JPanel sidebar = new JPanel();
+        sidebar = new JPanel();
         sidebar.setLayout(new BoxLayout(sidebar, BoxLayout.Y_AXIS));
-        sidebar.setPreferredSize(new Dimension(200, 0));
+        sidebar.setPreferredSize(new Dimension(220, 0));
+        sidebar.setBackground(new Color(248, 249, 250));
         sidebar.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
-        JLabel titleLabel = new JLabel("LibManSys");
-        titleLabel.setFont(new Font("Arial", Font.BOLD, 28));
-        titleLabel.setAlignmentX(JComponent.CENTER_ALIGNMENT);
-        sidebar.add(titleLabel);
+        JLabel logoLabel = new JLabel("Library", SwingConstants.CENTER);
+        logoLabel.setFont(new Font("Arial", Font.BOLD, 24));
+        logoLabel.setAlignmentX(JComponent.CENTER_ALIGNMENT);
+        logoLabel.setForeground(new Color(25, 25, 112));
+        sidebar.add(logoLabel);
+        sidebar.add(new javax.swing.JSeparator());
+        sidebar.add(javax.swing.Box.createRigidArea(new Dimension(0, 20)));
 
-        sidebar.add(Box.createRigidArea(new Dimension(0, 30)));
+        addMenuButton("Dashboard", "Dashboard");
+        addMenuButton("Readers", "Readers");
+        addMenuButton("Librarians", "Librarians");
+        addMenuButton("Books", "Books");
+        addMenuButton("Check-out Books", "Check-out Books");
 
-        sidebar.add(createNavButton("Dashboard", "Dashboard"));
-        sidebar.add(Box.createRigidArea(new Dimension(0, 10)));
-        sidebar.add(createNavButton("Books", "Books"));
-        sidebar.add(Box.createRigidArea(new Dimension(0, 10)));
-        sidebar.add(createNavButton("Readers", "Readers"));
-        sidebar.add(Box.createRigidArea(new Dimension(0, 10)));
-        sidebar.add(createNavButton("Librarians", "Librarians"));
-        sidebar.add(Box.createRigidArea(new Dimension(0, 10))); // Spacing for new button
-        sidebar.add(createNavButton("Profile", "Profile")); // New Profile button
-        
-        sidebar.add(Box.createVerticalGlue());
-        JButton themeToggleButton = new JButton("Toggle Theme");
-        themeToggleButton.setFont(new Font("Arial", Font.PLAIN, 16));
-        themeToggleButton.setAlignmentX(JComponent.CENTER_ALIGNMENT);
-        themeToggleButton.setMaximumSize(new Dimension(Integer.MAX_VALUE, themeToggleButton.getPreferredSize().height));
-        themeToggleButton.addActionListener(e -> toggleTheme());
-        sidebar.add(themeToggleButton);
+        sidebar.add(javax.swing.Box.createVerticalGlue());
+
+        JButton logoutButton = new JButton("Logout");
+        styleMenuButton(logoutButton);
+        logoutButton.addActionListener(e -> {
+            frame.dispose();
+            new Login().setVisible(true);
+        });
+        sidebar.add(logoutButton);
 
         return sidebar;
     }
 
-    private JButton createNavButton(String text, String cardName) {
+    private void addMenuButton(String text, String cardName) {
         JButton button = new JButton(text);
-        button.setFont(new Font("Arial", Font.PLAIN, 18));
+        styleMenuButton(button);
+        button.addActionListener(e -> {
+            currentCard = cardName;
+            cardLayout.show(mainPanel, cardName);
+            setActiveButton((JButton) e.getSource());
+        });
+        sidebar.add(button);
+        sidebar.add(javax.swing.Box.createRigidArea(new Dimension(0, 5)));
+        menuButtons.put(text, button);
+    }
+    
+    private void setActiveButton(JButton button) {
+        if (activeMenuButton != null) {
+            styleMenuButton(activeMenuButton);
+        }
+        activeMenuButton = button;
+        activeMenuButton.setBackground(new Color(46, 139, 87));
+        activeMenuButton.setForeground(Color.WHITE);
+    }
+
+    private void styleMenuButton(JButton button) {
+        button.setFont(new Font("Arial", Font.PLAIN, 16));
+        button.setBackground(new Color(248, 249, 250));
+        button.setForeground(new Color(50, 50, 50));
         button.setFocusPainted(false);
         button.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
+        button.setHorizontalAlignment(SwingConstants.LEFT);
         button.setAlignmentX(JComponent.CENTER_ALIGNMENT);
         button.setMaximumSize(new Dimension(Integer.MAX_VALUE, button.getPreferredSize().height));
-        button.addActionListener(e -> cardLayout.show(mainPanel, cardName));
-        return button;
     }
 
-    private JPanel createDashboardPanel() {
-        JPanel panel = new JPanel(new BorderLayout());
-        JLabel welcomeLabel = new JLabel("Welcome, " + loggedInUserName + "!", SwingConstants.CENTER); // Personalized welcome
-        welcomeLabel.setFont(new Font("Arial", Font.BOLD, 24));
-        panel.add(welcomeLabel, BorderLayout.NORTH); // Changed to NORTH
+    private JPanel createTopBar(String userName) {
+        JPanel topBar = new JPanel(new GridBagLayout());
+        topBar.setBackground(Color.WHITE);
+        topBar.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, new Color(220, 220, 220)));
 
-        JLabel systemLabel = new JLabel("Library Management System", SwingConstants.CENTER);
-        systemLabel.setFont(new Font("Arial", Font.PLAIN, 20));
-        panel.add(systemLabel, BorderLayout.CENTER); // Centered below welcome
+        // Constraints for the search field
+        GridBagConstraints searchGbc = new GridBagConstraints();
+        searchGbc.insets = new Insets(5, 10, 5, 10);
+        searchGbc.weightx = 1.0;
+        searchGbc.fill = GridBagConstraints.HORIZONTAL;
+        searchGbc.gridx = 0;
+        JTextField searchField = new JTextField("Ex. Title, Author, Member, etc.");
+        searchField.setPreferredSize(new Dimension(300, 30));
+        topBar.add(searchField, searchGbc);
 
-        return panel;
+        searchField.getDocument().addDocumentListener(new DocumentListener() {
+            @Override
+            public void insertUpdate(DocumentEvent e) {
+                filterCurrentTable(searchField.getText());
+            }
+            @Override
+            public void removeUpdate(DocumentEvent e) {
+                filterCurrentTable(searchField.getText());
+            }
+            @Override
+            public void changedUpdate(DocumentEvent e) {
+                filterCurrentTable(searchField.getText());
+            }
+        });
+
+        // Constraints for the user label
+        GridBagConstraints userGbc = new GridBagConstraints();
+        userGbc.insets = new Insets(5, 10, 5, 10);
+        userGbc.gridx = 1;
+        JLabel userLabel = new JLabel(userName);
+        userLabel.setFont(new Font("Arial", Font.BOLD, 14));
+        topBar.add(userLabel, userGbc);
+
+        return topBar;
     }
 
-    private JPanel createBooksPanel() {
-        JPanel panel = new JPanel(new BorderLayout(10, 10));
-        panel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
-
-        // Top panel for search and add button
-        JPanel topPanel = new JPanel(new BorderLayout());
-        JTextField searchField = new JTextField();
-        searchField.addActionListener(e -> loadBooks(searchField.getText()));
-        topPanel.add(searchField, BorderLayout.CENTER);
-        
-        JButton searchButton = new JButton("Search Books");
-        searchButton.addActionListener(e -> loadBooks(searchField.getText()));
-        topPanel.add(searchButton, BorderLayout.EAST);
-        
-        JButton addBookButton = new JButton("Add Book");
-        addBookButton.addActionListener(e -> addBook());
-        
-        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        buttonPanel.add(addBookButton);
-        topPanel.add(buttonPanel, BorderLayout.SOUTH);
-        
-        panel.add(topPanel, BorderLayout.NORTH);
-
-        // Content panel for books
-        booksContentPanel = new JPanel(new GridLayout(0, 3, 10, 10));
-        JScrollPane scrollPane = new JScrollPane(booksContentPanel);
-        panel.add(scrollPane, BorderLayout.CENTER);
-
-        return panel;
-    }
-    
-    private JPanel createAccountsPanel(String role) {
-        JPanel panel = new JPanel(new BorderLayout(10, 10));
-        panel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
-
-        // Top panel for search and add button
-        JPanel topPanel = new JPanel(new BorderLayout());
-        JTextField searchField = new JTextField();
-        searchField.addActionListener(e -> loadAccounts(role, searchField.getText()));
-        topPanel.add(searchField, BorderLayout.CENTER);
-        
-        JButton searchButton = new JButton("Search " + capitalize(role) + "s");
-        searchButton.addActionListener(e -> loadAccounts(role, searchField.getText()));
-        topPanel.add(searchButton, BorderLayout.EAST);
-
-        JButton addAccountButton = new JButton("Add " + capitalize(role));
-        addAccountButton.addActionListener(e -> addAccount(role));
-        
-        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        buttonPanel.add(addAccountButton);
-        topPanel.add(buttonPanel, BorderLayout.SOUTH);
-        
-        panel.add(topPanel, BorderLayout.NORTH);
-
-        // Content panel for accounts
-        if (role.equals("reader")) {
-            readersContentPanel = new JPanel(new GridLayout(0, 3, 10, 10));
-            panel.add(new JScrollPane(readersContentPanel), BorderLayout.CENTER);
-        } else {
-            librariansContentPanel = new JPanel(new GridLayout(0, 3, 10, 10));
-            panel.add(new JScrollPane(librariansContentPanel), BorderLayout.CENTER);
+    private void filterCurrentTable(String text) {
+        if (currentCard != null) {
+            TableRowSorter<DefaultTableModel> sorter = sorters.get(currentCard);
+            if (sorter != null) {
+                sorter.setRowFilter(RowFilter.regexFilter("(?i)" + text));
+            }
         }
+    }
+
+    private JPanel createDashboardScreen() {
+        JPanel panel = new JPanel(new BorderLayout(10, 10));
+        panel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+
+        JPanel topCardsPanel = new JPanel(new GridLayout(2, 4, 10, 10));
+        
+        int borrowedBooks = getMetricValue("SELECT COUNT(*) FROM transactions WHERE transaction_type = 'borrow'");
+        topCardsPanel.add(createMetricCard("Borrowed Books", String.valueOf(borrowedBooks), "+23%"));
+
+        int returnedBooks = getMetricValue("SELECT COUNT(*) FROM transactions WHERE transaction_type = 'return'");
+        topCardsPanel.add(createMetricCard("Returned Books", String.valueOf(returnedBooks), "+10%"));
+        
+        topCardsPanel.add(createMetricCard("Overdue Books", "12", "-5%"));
+        topCardsPanel.add(createMetricCard("Missing Books", "3", "+1%"));
+        
+        int totalBooks = getMetricValue("SELECT COUNT(*) FROM books");
+        topCardsPanel.add(createMetricCard("Total Books", String.valueOf(totalBooks), ""));
+
+        topCardsPanel.add(createMetricCard("Visitors", "2,345", ""));
+        
+        int totalMembers = getMetricValue("SELECT COUNT(*) FROM account WHERE role = 'reader'");
+        topCardsPanel.add(createMetricCard("New Members", String.valueOf(totalMembers), ""));
+        
+        topCardsPanel.add(createMetricCard("Pending Fees", "$540", ""));
+        panel.add(topCardsPanel, BorderLayout.NORTH);
+
+        JPanel centerContent = new JPanel(new GridLayout(2,1,10,10));
+        centerContent.setOpaque(false);
+        JPanel chartPanel = new JPanel(new BorderLayout());
+        chartPanel.setBorder(BorderFactory.createTitledBorder("Check-out Statistics"));
+        chartPanel.add(new JLabel("Chart will be here (requires a library like JFreeChart).", SwingConstants.CENTER));
+        centerContent.add(chartPanel);
+        
+        String[] overdueColumns = {"Member ID", "Title", "ISBN", "Due Date", "Fine"};
+        JTable overdueTable = new JTable(new DefaultTableModel(overdueColumns, 0));
+        overdueTable.setFillsViewportHeight(true);
+        JScrollPane overdueScrollPane = new JScrollPane(overdueTable);
+        overdueScrollPane.setBorder(BorderFactory.createTitledBorder("Overdue Books History"));
+        centerContent.add(overdueScrollPane);
+
+        JPanel topBooksPanel = new JPanel(new BorderLayout());
+        topBooksPanel.setBorder(BorderFactory.createTitledBorder("Top Books"));
+        
+        String[] topBooksColumns = {"Title", "Author", "Times Borrowed"};
+        DefaultTableModel topBooksModel = new DefaultTableModel(topBooksColumns, 0);
+        topBooksTable = new JTable(topBooksModel);
+        topBooksTable.setFillsViewportHeight(true);
+        topBooksPanel.add(new JScrollPane(topBooksTable), BorderLayout.CENTER);
+        loadTopBooks();
+        topBooksPanel.setPreferredSize(new Dimension(250, 0));
+
+        JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, centerContent, topBooksPanel);
+        splitPane.setResizeWeight(0.8);
+        panel.add(splitPane, BorderLayout.CENTER);
+
+        String[] recentColumns = {"ID", "ISBN", "Title", "Author", "Member", "Issued Date", "Return Date", "Status"};
+        DefaultTableModel recentModel = new DefaultTableModel(recentColumns, 0);
+        recentCheckOutsTable = new JTable(recentModel);
+        recentCheckOutsTable.setFillsViewportHeight(true);
+        JScrollPane recentScrollPane = new JScrollPane(recentCheckOutsTable);
+        recentScrollPane.setBorder(BorderFactory.createTitledBorder("Recent Check-out's"));
+        recentScrollPane.setPreferredSize(new Dimension(0, 150));
+        panel.add(recentScrollPane, BorderLayout.SOUTH);
+        loadRecentCheckOuts();
 
         return panel;
     }
 
-    private void loadBooks(String searchTerm) {
-        booksContentPanel.removeAll();
+    private int getMetricValue(String query) {
+        int count = 0;
         try {
-            String query = "SELECT * FROM books WHERE book_name LIKE ? OR book_author LIKE ?";
-            PreparedStatement pst = db.con.prepareStatement(query);
-            pst.setString(1, "%" + searchTerm + "%");
-            pst.setString(2, "%" + searchTerm + "%");
-            ResultSet rs = pst.executeQuery();
-            while (rs.next()) {
-                int bookId = rs.getInt("book_id");
-                String name = rs.getString("book_name");
-                String author = rs.getString("book_author");
-                Date issueDate = rs.getDate("issue_date");
-                String category = rs.getString("book_category");
-                booksContentPanel.add(createBookCard(bookId, name, author, issueDate, category));
+            PreparedStatement prep = dbConnect.con.prepareStatement(query);
+            ResultSet result = prep.executeQuery();
+            if (result.next()) {
+                count = result.getInt(1);
             }
         } catch (SQLException e) {
             e.printStackTrace();
         }
-        booksContentPanel.revalidate();
-        booksContentPanel.repaint();
+        return count;
     }
-    
-    private JPanel createBookCard(int bookId, String name, String author, Date issueDate, String category) {
-        JPanel card = new JPanel();
-        card.setLayout(new BorderLayout());
-        card.setBorder(BorderFactory.createLineBorder(Color.GRAY, 1));
 
-        JPanel detailsPanel = new JPanel();
-        detailsPanel.setLayout(new BoxLayout(detailsPanel, BoxLayout.Y_AXIS));
-        detailsPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
-        detailsPanel.add(new JLabel("ID: " + bookId));
-        detailsPanel.add(new JLabel("Name: " + name));
-        detailsPanel.add(new JLabel("Author: " + author));
-        detailsPanel.add(new JLabel("Issue Date: " + (issueDate != null ? issueDate.toString() : "N/A")));
-        detailsPanel.add(new JLabel("Category: " + category));
-        card.add(detailsPanel, BorderLayout.CENTER);
+    private void loadTopBooks() {
+        DefaultTableModel model = (DefaultTableModel) topBooksTable.getModel();
+        model.setRowCount(0); // Clear existing data
+        try {
+            String query = "SELECT b.book_name, b.book_author, COUNT(t.book_id) AS times_borrowed FROM transactions t JOIN books b ON t.book_id = b.book_id GROUP BY b.book_name, b.book_author ORDER BY times_borrowed DESC LIMIT 5";
+            PreparedStatement prep = dbConnect.con.prepareStatement(query);
+            ResultSet result = prep.executeQuery();
+            while (result.next()) {
+                String title = result.getString("book_name");
+                String author = result.getString("book_author");
+                int timesBorrowed = result.getInt("times_borrowed");
+                model.addRow(new Object[]{title, author, timesBorrowed});
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void loadRecentCheckOuts() {
+        DefaultTableModel model = (DefaultTableModel) recentCheckOutsTable.getModel();
+        model.setRowCount(0); // Clear existing data
+        try {
+            String query = "SELECT t.transaction_id, t.book_name, b.book_author, a.first_name, a.last_name, t.transaction_type FROM transactions t JOIN books b ON t.book_id = b.book_id JOIN account a ON t.account_id = a.account_id ORDER BY t.transaction_id DESC LIMIT 10";
+            PreparedStatement prep = dbConnect.con.prepareStatement(query);
+            ResultSet result = prep.executeQuery();
+            while (result.next()) {
+                String id = "T" + String.format("%03d", result.getInt("transaction_id"));
+                String title = result.getString("book_name");
+                String author = result.getString("book_author");
+                String member = result.getString("first_name") + " " + result.getString("last_name");
+                String status = result.getString("transaction_type");
+                
+                model.addRow(new Object[]{id, "", title, author, member, "", "", status}); // ISBN, Issued Date, Return Date are blank as per schema limitations
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private JTable readersTable;
+    private JTable topBooksTable;
+    private JTable recentCheckOutsTable;
+    private JTable librariansTable;
+    private JTable booksTable;
+
+    private JPanel createMetricCard(String title, String value, String change) {
+        JPanel card = new JPanel(new BorderLayout());
+        card.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(new Color(220, 220, 220)),
+            BorderFactory.createEmptyBorder(10, 10, 10, 10)
+        ));
+        card.setBackground(Color.WHITE);
         
-        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        JButton updateButton = new JButton("Update");
-        updateButton.addActionListener(e -> updateBook(bookId, name, author, category));
-        JButton deleteButton = new JButton("Delete");
-        deleteButton.addActionListener(e -> deleteBook(bookId));
-        buttonPanel.add(updateButton);
-        buttonPanel.add(deleteButton);
-        card.add(buttonPanel, BorderLayout.SOUTH);
+        JLabel titleLabel = new JLabel(title);
+        titleLabel.setFont(new Font("Arial", Font.BOLD, 14));
+        card.add(titleLabel, BorderLayout.NORTH);
+
+        JLabel valueLabel = new JLabel(value);
+        valueLabel.setFont(new Font("Arial", Font.BOLD, 28));
+        card.add(valueLabel, BorderLayout.CENTER);
+
+        JLabel changeLabel = new JLabel(change);
+        changeLabel.setFont(new Font("Arial", Font.PLAIN, 12));
+        if (change.startsWith("+")) {
+            changeLabel.setForeground(new Color(0, 128, 0));
+        } else if (change.startsWith("-")) {
+            changeLabel.setForeground(Color.RED);
+        }
+        card.add(changeLabel, BorderLayout.SOUTH);
 
         return card;
     }
 
-    private void addBook() {
-        JTextField nameField = new JTextField();
-        JTextField authorField = new JTextField();
-        JTextField categoryField = new JTextField();
-        Object[] message = {
-                "Name:", nameField,
-                "Author:", authorField,
-                "Category:", categoryField
-        };
-        int option = JOptionPane.showConfirmDialog(null, message, "Add New Book", JOptionPane.OK_CANCEL_OPTION);
-        if (option == JOptionPane.OK_OPTION) {
-            try {
-                String query = "INSERT INTO books (book_name, book_author, issue_date, book_category) VALUES (?, ?, CURDATE(), ?)";
-                PreparedStatement pst = db.con.prepareStatement(query);
-                pst.setString(1, nameField.getText());
-                pst.setString(2, authorField.getText());
-                pst.setString(3, categoryField.getText());
-                pst.executeUpdate();
-                loadBooks("");
-            } catch (SQLException e) {
-                e.printStackTrace();
+    private JPanel createReadersScreen() {
+        JPanel panel = new JPanel(new BorderLayout(10, 10));
+        panel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        
+        JPanel headerPanel = new JPanel(new BorderLayout());
+        JPanel titlePanel = new JPanel();
+        titlePanel.setLayout(new BoxLayout(titlePanel, BoxLayout.Y_AXIS));
+        JLabel title = new JLabel("Readers");
+        title.setFont(new Font("Arial", Font.BOLD, 24));
+        JLabel subtitle = new JLabel("To create a reader and view the reader report.");
+        subtitle.setFont(new Font("Arial", Font.PLAIN, 14));
+        titlePanel.add(title);
+        titlePanel.add(subtitle);
+        headerPanel.add(titlePanel, BorderLayout.WEST);
+        
+        JPanel buttonsPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        JTextField searchField = new JTextField("Reader Search", 20);
+        buttonsPanel.add(searchField);
+        JButton addButton = new JButton("Add Readers");
+        addButton.setBackground(new Color(46, 139, 87));
+        addButton.setForeground(Color.WHITE);
+        addButton.addActionListener(e -> {
+            AddUserDialog dialog = new AddUserDialog(frame, "Add Reader", true, true);
+            dialog.setVisible(true);
+        });
+        buttonsPanel.add(addButton);
+        headerPanel.add(buttonsPanel, BorderLayout.EAST);
+        
+        panel.add(headerPanel, BorderLayout.NORTH);
+
+        String[] columns = {"Reader ID", "Reader", "Email ID", "Action"};
+        DefaultTableModel model = new DefaultTableModel(columns, 0);
+        readersTable = new JTable(model);
+        readersTable.setFillsViewportHeight(true);
+
+        TableRowSorter<DefaultTableModel> sorter = new TableRowSorter<>(model);
+        readersTable.setRowSorter(sorter);
+        sorters.put("Readers", sorter);
+
+        searchField.getDocument().addDocumentListener(new DocumentListener() {
+            @Override
+            public void insertUpdate(DocumentEvent e) {
+                filterTable();
+            }
+            @Override
+            public void removeUpdate(DocumentEvent e) {
+                filterTable();
+            }
+            @Override
+            public void changedUpdate(DocumentEvent e) {
+                filterTable();
+            }
+            private void filterTable() {
+                sorter.setRowFilter(RowFilter.regexFilter("(?i)" + searchField.getText()));
+            }
+        });
+
+        readersTable.getColumnModel().getColumn(3).setCellRenderer(new ActionPanel());
+        readersTable.getColumnModel().getColumn(3).setCellEditor(new ActionCellEditor(readersTable));
+        
+        panel.add(new JScrollPane(readersTable), BorderLayout.CENTER);
+        
+        loadReaders();
+
+        return panel;
+    }
+
+    private void loadReaders() {
+        DefaultTableModel model = (DefaultTableModel) readersTable.getModel();
+        model.setRowCount(0); // Clear existing data
+        try {
+            String query = "SELECT account_id, first_name, last_name, email FROM account WHERE role = 'reader'";
+            PreparedStatement prep = dbConnect.con.prepareStatement(query);
+            ResultSet result = prep.executeQuery();
+            while (result.next()) {
+                String memberId = "M" + String.format("%03d", result.getInt("account_id"));
+                String name = result.getString("first_name") + " " + result.getString("last_name");
+                String email = result.getString("email");
+                model.addRow(new Object[]{memberId, name, email, "Edit / Cancel"});
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private JPanel createLibrariansScreen() {
+        JPanel panel = new JPanel(new BorderLayout(10, 10));
+        panel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        
+        JPanel headerPanel = new JPanel(new BorderLayout());
+        JPanel titlePanel = new JPanel();
+        titlePanel.setLayout(new BoxLayout(titlePanel, BoxLayout.Y_AXIS));
+        JLabel title = new JLabel("Librarians");
+        title.setFont(new Font("Arial", Font.BOLD, 24));
+        JLabel subtitle = new JLabel("To create a librarian and view the librarian report.");
+        subtitle.setFont(new Font("Arial", Font.PLAIN, 14));
+        titlePanel.add(title);
+        titlePanel.add(subtitle);
+        headerPanel.add(titlePanel, BorderLayout.WEST);
+        
+        JPanel buttonsPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        JTextField searchField = new JTextField("Librarian Search", 20);
+        buttonsPanel.add(searchField);
+        JButton addButton = new JButton("Add Librarians");
+        addButton.setBackground(new Color(46, 139, 87));
+        addButton.setForeground(Color.WHITE);
+        addButton.addActionListener(e -> {
+            AddUserDialog dialog = new AddUserDialog(frame, "Add Librarian", true, false);
+            dialog.setVisible(true);
+        });
+        buttonsPanel.add(addButton);
+        headerPanel.add(buttonsPanel, BorderLayout.EAST);
+        
+        panel.add(headerPanel, BorderLayout.NORTH);
+
+        String[] columns = {"Librarian ID", "Librarian", "Email ID", "Action"};
+        DefaultTableModel model = new DefaultTableModel(columns, 0);
+        librariansTable = new JTable(model);
+        librariansTable.setFillsViewportHeight(true);
+
+        TableRowSorter<DefaultTableModel> sorter = new TableRowSorter<>(model);
+        librariansTable.setRowSorter(sorter);
+        sorters.put("Librarians", sorter);
+
+        searchField.getDocument().addDocumentListener(new DocumentListener() {
+            @Override
+            public void insertUpdate(DocumentEvent e) {
+                filterTable();
+            }
+            @Override
+            public void removeUpdate(DocumentEvent e) {
+                filterTable();
+            }
+            @Override
+            public void changedUpdate(DocumentEvent e) {
+                filterTable();
+            }
+            private void filterTable() {
+                sorter.setRowFilter(RowFilter.regexFilter("(?i)" + searchField.getText()));
+            }
+        });
+
+        librariansTable.getColumnModel().getColumn(3).setCellRenderer(new ActionPanel());
+        librariansTable.getColumnModel().getColumn(3).setCellEditor(new ActionCellEditor(librariansTable));
+        
+        panel.add(new JScrollPane(librariansTable), BorderLayout.CENTER);
+        
+        loadLibrarians();
+
+        return panel;
+    }
+
+    private void loadLibrarians() {
+        DefaultTableModel model = (DefaultTableModel) librariansTable.getModel();
+        model.setRowCount(0); // Clear existing data
+        try {
+            String query = "SELECT account_id, first_name, last_name, email FROM account WHERE role = 'librarian'";
+            PreparedStatement prep = dbConnect.con.prepareStatement(query);
+            ResultSet result = prep.executeQuery();
+            while (result.next()) {
+                String memberId = "L" + String.format("%03d", result.getInt("account_id"));
+                String name = result.getString("first_name") + " " + result.getString("last_name");
+                String email = result.getString("email");
+                model.addRow(new Object[]{memberId, name, email, "Edit / Cancel"});
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private JTable checkOutTable;
+
+    private JPanel createBooksScreen() {
+        JPanel panel = new JPanel(new BorderLayout(10, 10));
+        panel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        
+        JPanel headerPanel = new JPanel(new BorderLayout());
+        JPanel titlePanel = new JPanel();
+        titlePanel.setLayout(new BoxLayout(titlePanel, BoxLayout.Y_AXIS));
+        JLabel title = new JLabel("Books");
+        title.setFont(new Font("Arial", Font.BOLD, 24));
+        JLabel subtitle = new JLabel("To add, edit, delete, and view book reports.");
+        subtitle.setFont(new Font("Arial", Font.PLAIN, 14));
+        titlePanel.add(title);
+        titlePanel.add(subtitle);
+        headerPanel.add(titlePanel, BorderLayout.WEST);
+        
+        JPanel buttonsPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        JTextField searchField = new JTextField("Book Search", 20);
+        buttonsPanel.add(searchField);
+        JButton addButton = new JButton("Add Book");
+        addButton.setBackground(new Color(46, 139, 87));
+        addButton.setForeground(Color.WHITE);
+        addButton.addActionListener(e -> {
+            AddBookDialog dialog = new AddBookDialog(frame, "Add Book", true);
+            dialog.setVisible(true);
+        });
+        buttonsPanel.add(addButton);
+        headerPanel.add(buttonsPanel, BorderLayout.EAST);
+        
+        panel.add(headerPanel, BorderLayout.NORTH);
+
+        String[] columns = {"Book ID", "Name", "Author", "Category", "Action"};
+        DefaultTableModel model = new DefaultTableModel(columns, 0);
+        booksTable = new JTable(model);
+        booksTable.setFillsViewportHeight(true);
+
+        TableRowSorter<DefaultTableModel> sorter = new TableRowSorter<>(model);
+        booksTable.setRowSorter(sorter);
+        sorters.put("Books", sorter);
+
+        searchField.getDocument().addDocumentListener(new DocumentListener() {
+            @Override
+            public void insertUpdate(DocumentEvent e) {
+                filterTable();
+            }
+            @Override
+            public void removeUpdate(DocumentEvent e) {
+                filterTable();
+            }
+            @Override
+            public void changedUpdate(DocumentEvent e) {
+                filterTable();
+            }
+            private void filterTable() {
+                sorter.setRowFilter(RowFilter.regexFilter("(?i)" + searchField.getText()));
+            }
+        });
+
+        booksTable.getColumnModel().getColumn(4).setCellRenderer(new ActionPanel());
+        booksTable.getColumnModel().getColumn(4).setCellEditor(new ActionCellEditor(booksTable));
+        
+        panel.add(new JScrollPane(booksTable), BorderLayout.CENTER);
+        
+        loadBooks();
+
+        return panel;
+    }
+
+    private void loadBooks() {
+        DefaultTableModel model = (DefaultTableModel) booksTable.getModel();
+        model.setRowCount(0); // Clear existing data
+        try {
+            String query = "SELECT * FROM books";
+            PreparedStatement prep = dbConnect.con.prepareStatement(query);
+            ResultSet result = prep.executeQuery();
+            while (result.next()) {
+                int bookId = result.getInt("book_id");
+                String name = result.getString("book_name");
+                String author = result.getString("book_author");
+                String category = result.getString("book_category");
+                model.addRow(new Object[]{bookId, name, author, category, "Edit / Delete"});
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private JPanel createCheckOutBooksScreen() {
+        JPanel panel = new JPanel(new BorderLayout(10, 10));
+        panel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        
+        JPanel headerPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        JTextField searchField = new JTextField("Search...", 30);
+        String[] filters = {"ISBN", "Title", "Author", "Member"};
+        JComboBox<String> filterComboBox = new JComboBox<>(filters);
+        headerPanel.add(searchField);
+        headerPanel.add(filterComboBox);
+        panel.add(headerPanel, BorderLayout.NORTH);
+
+        String[] columns = {"Member ID", "ISBN", "Title", "Author", "Borrowed Date", "Returned Date", "Status", "Action"};
+        DefaultTableModel model = new DefaultTableModel(columns, 0);
+        checkOutTable = new JTable(model);
+        checkOutTable.setFillsViewportHeight(true);
+        
+        panel.add(new JScrollPane(checkOutTable), BorderLayout.CENTER);
+        
+        loadCheckOuts();
+        
+        return panel;
+    }
+
+    private void loadCheckOuts() {
+        DefaultTableModel model = (DefaultTableModel) checkOutTable.getModel();
+        model.setRowCount(0);
+        try {
+            String query = "SELECT t.account_id, t.book_name, b.book_author, t.transaction_type FROM transactions t JOIN books b ON t.book_id = b.book_id";
+            PreparedStatement prep = dbConnect.con.prepareStatement(query);
+            ResultSet result = prep.executeQuery();
+            while (result.next()) {
+                String memberId = "M" + String.format("%03d", result.getInt("account_id"));
+                String title = result.getString("book_name");
+                String author = result.getString("book_author");
+                String status = result.getString("transaction_type");
+                
+                model.addRow(new Object[]{memberId, "", title, author, "", "", status, "Return / Renew"});
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    // Inner class for the action panel
+    @SuppressWarnings("serial")
+	class ActionPanel extends JPanel implements TableCellRenderer {
+        private JButton editButton;
+        private JButton deleteButton;
+
+        public ActionPanel() {
+            setLayout(new FlowLayout(FlowLayout.CENTER, 5, 0));
+            editButton = new JButton("Edit");
+            deleteButton = new JButton("Delete");
+
+            editButton.setOpaque(true);
+            deleteButton.setOpaque(true);
+
+            add(editButton);
+            add(deleteButton);
+        }
+
+        @Override
+        public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
+            if (isSelected) {
+                setForeground(table.getSelectionForeground());
+                setBackground(table.getSelectionBackground());
+            } else {
+                setForeground(table.getForeground());
+                setBackground(UIManager.getColor("Button.background"));
+            }
+            return this;
+        }
+    }
+
+    // Inner class for the cell editor
+    @SuppressWarnings("serial")
+	class ActionCellEditor extends AbstractCellEditor implements TableCellEditor, ActionListener {
+        private JPanel panel;
+        private JButton editButton;
+        private JButton deleteButton;
+        private JTable table;
+        private int row;
+
+        public ActionCellEditor(JTable table) {
+            this.table = table;
+            panel = new JPanel(new FlowLayout(FlowLayout.CENTER, 5, 0));
+            editButton = new JButton("Edit");
+            deleteButton = new JButton("Delete");
+
+            editButton.setOpaque(true);
+            deleteButton.setOpaque(true);
+
+            editButton.setActionCommand("edit");
+            deleteButton.setActionCommand("delete");
+
+            editButton.addActionListener(this);
+            deleteButton.addActionListener(this);
+
+            panel.add(editButton);
+            panel.add(deleteButton);
+        }
+
+        @Override
+        public Component getTableCellEditorComponent(JTable table, Object value, boolean isSelected, int row, int column) {
+            this.row = row;
+            return panel;
+        }
+
+        @Override
+        public Object getCellEditorValue() {
+            return null;
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            fireEditingStopped();
+
+            if (table == readersTable || table == librariansTable) {
+                String idStr = (String) table.getModel().getValueAt(row, 0);
+                int id = Integer.parseInt(idStr.substring(1)); // Remove the "M" or "L" prefix
+
+                if ("delete".equals(e.getActionCommand())) {
+                    int response = JOptionPane.showConfirmDialog(
+                        table,
+                        "Are you sure you want to delete this user?",
+                        "Confirm Deletion",
+                        JOptionPane.YES_NO_OPTION,
+                        JOptionPane.WARNING_MESSAGE
+                    );
+
+                    if (response == JOptionPane.YES_OPTION) {
+                        try {
+                            String query = "DELETE FROM account WHERE account_id = ?";
+                            PreparedStatement prep = dbConnect.con.prepareStatement(query);
+                            prep.setInt(1, id);
+                            prep.executeUpdate();
+
+                            // Refresh the table
+                            if (table == readersTable) {
+                                loadReaders();
+                            } else if (table == librariansTable) {
+                                loadLibrarians();
+                            }
+                        } catch (SQLException ex) {
+                            ex.printStackTrace();
+                            JOptionPane.showMessageDialog(table, "Error deleting user.", "Database Error", JOptionPane.ERROR_MESSAGE);
+                        }
+                    }
+                } else { // Edit button
+                    String name = (String) table.getModel().getValueAt(row, 1);
+                    String email = (String) table.getModel().getValueAt(row, 2);
+                    String[] nameParts = name.split(" ");
+                    String firstName = nameParts[0];
+                    String lastName = nameParts.length > 1 ? nameParts[1] : "";
+
+                    EditUserDialog dialog = new EditUserDialog(frame, "Edit User", true, id, firstName, lastName, email, table == readersTable);
+                    dialog.setVisible(true);
+                }
+            } else if (table == booksTable) {
+                int bookId = (int) table.getModel().getValueAt(row, 0);
+
+                if ("delete".equals(e.getActionCommand())) {
+                    int response = JOptionPane.showConfirmDialog(
+                        table,
+                        "Are you sure you want to delete this book?",
+                        "Confirm Deletion",
+                        JOptionPane.YES_NO_OPTION,
+                        JOptionPane.WARNING_MESSAGE
+                    );
+
+                    if (response == JOptionPane.YES_OPTION) {
+                        try {
+                            String query = "DELETE FROM books WHERE book_id = ?";
+                            PreparedStatement prep = dbConnect.con.prepareStatement(query);
+                            prep.setInt(1, bookId);
+                            prep.executeUpdate();
+                            loadBooks();
+                        } catch (SQLException ex) {
+                            ex.printStackTrace();
+                            JOptionPane.showMessageDialog(table, "Error deleting book.", "Database Error", JOptionPane.ERROR_MESSAGE);
+                        }
+                    }
+                } else { // Edit button
+                    String name = (String) table.getModel().getValueAt(row, 1);
+                    String author = (String) table.getModel().getValueAt(row, 2);
+                    String category = (String) table.getModel().getValueAt(row, 3);
+                    EditBookDialog dialog = new EditBookDialog(frame, "Edit Book", true, bookId, name, author, category);
+                    dialog.setVisible(true);
+                }
             }
         }
     }
 
-    private void updateBook(int bookId, String currentName, String currentAuthor, String currentCategory) {
-        JTextField nameField = new JTextField(currentName);
-        JTextField authorField = new JTextField(currentAuthor);
-        JTextField categoryField = new JTextField(currentCategory);
-        Object[] message = {
-                "Name:", nameField,
-                "Author:", authorField,
-                "Category:", categoryField
-        };
-        int option = JOptionPane.showConfirmDialog(null, message, "Update Book", JOptionPane.OK_CANCEL_OPTION);
-        if (option == JOptionPane.OK_OPTION) {
+    // Inner class for the edit user dialog
+    @SuppressWarnings("serial")
+	class EditUserDialog extends JDialog {
+        private JTextField firstNameField;
+        private JTextField lastNameField;
+        private JTextField emailField;
+        private JButton saveButton;
+        private JButton cancelButton;
+        private int userId;
+        private boolean isReader;
+
+        public EditUserDialog(JFrame parent, String title, boolean modal, int userId, String firstName, String lastName, String email, boolean isReader) {
+            super(parent, title, modal);
+            this.userId = userId;
+            this.isReader = isReader;
+            
+            firstNameField = new JTextField(firstName, 20);
+            lastNameField = new JTextField(lastName, 20);
+            emailField = new JTextField(email, 20);
+            saveButton = new JButton("Save");
+            cancelButton = new JButton("Cancel");
+
+            setLayout(new GridLayout(4, 2, 10, 10));
+            add(new JLabel("First Name:"));
+            add(firstNameField);
+            add(new JLabel("Last Name:"));
+            add(lastNameField);
+            add(new JLabel("Email:"));
+            add(emailField);
+            add(saveButton);
+            add(cancelButton);
+
+            saveButton.addActionListener(e -> onSave());
+            cancelButton.addActionListener(e -> dispose());
+
+            pack();
+            setLocationRelativeTo(parent);
+        }
+
+        private void onSave() {
+            try {
+                String query = "UPDATE account SET first_name = ?, last_name = ?, email = ? WHERE account_id = ?";
+                PreparedStatement prep = dbConnect.con.prepareStatement(query);
+                prep.setString(1, firstNameField.getText());
+                prep.setString(2, lastNameField.getText());
+                prep.setString(3, emailField.getText());
+                prep.setInt(4, userId);
+                prep.executeUpdate();
+
+                if (isReader) {
+                    loadReaders();
+                } else {
+                    loadLibrarians();
+                }
+                dispose();
+            } catch (SQLException ex) {
+                ex.printStackTrace();
+                JOptionPane.showMessageDialog(this, "Error updating user.", "Database Error", JOptionPane.ERROR_MESSAGE);
+            }
+        }
+    }
+
+    // Inner class for the add user dialog
+    class AddUserDialog extends JDialog {
+        private JTextField firstNameField, lastNameField, ageField, contactField, emailField, addressField;
+        private JPasswordField passwordField;
+        private JComboBox<String> sexComboBox;
+        private JButton addButton, cancelButton;
+        private boolean isReader;
+
+        public AddUserDialog(JFrame parent, String title, boolean modal, boolean isReader) {
+            super(parent, title, modal);
+            this.isReader = isReader;
+
+            firstNameField = new JTextField(20);
+            lastNameField = new JTextField(20);
+            ageField = new JTextField(5);
+            contactField = new JTextField(15);
+            emailField = new JTextField(20);
+            addressField = new JTextField(20);
+            passwordField = new JPasswordField(20);
+            sexComboBox = new JComboBox<>(new String[]{"MALE", "FEMALE"});
+            addButton = new JButton("Add");
+            cancelButton = new JButton("Cancel");
+
+            setLayout(new GridLayout(9, 2, 10, 10));
+            add(new JLabel("First Name:"));
+            add(firstNameField);
+            add(new JLabel("Last Name:"));
+            add(lastNameField);
+            add(new JLabel("Age:"));
+            add(ageField);
+            add(new JLabel("Sex:"));
+            add(sexComboBox);
+            add(new JLabel("Contact Number:"));
+            add(contactField);
+            add(new JLabel("Email:"));
+            add(emailField);
+            add(new JLabel("Address:"));
+            add(addressField);
+            add(new JLabel("Password:"));
+            add(passwordField);
+            add(addButton);
+            add(cancelButton);
+
+            addButton.addActionListener(e -> onAdd());
+            cancelButton.addActionListener(e -> dispose());
+
+            pack();
+            setLocationRelativeTo(parent);
+        }
+
+        private void onAdd() {
+            String firstName = firstNameField.getText();
+            String lastName = lastNameField.getText();
+            String ageStr = ageField.getText();
+            String contact = contactField.getText();
+            String email = emailField.getText();
+            String address = addressField.getText();
+            String password = new String(passwordField.getPassword());
+            String sex = (String) sexComboBox.getSelectedItem();
+            String role = isReader ? "reader" : "librarian";
+
+            if (firstName.isEmpty() || lastName.isEmpty() || ageStr.isEmpty() || contact.isEmpty() || email.isEmpty() || address.isEmpty() || password.isEmpty()) {
+                JOptionPane.showMessageDialog(this, "All fields are required.", "Validation Error", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+
+            try {
+                int age = Integer.parseInt(ageStr);
+                String query = "INSERT INTO account (first_name, last_name, age, sex, contact_number, email, address, role, password) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                PreparedStatement prep = dbConnect.con.prepareStatement(query);
+                prep.setString(1, firstName);
+                prep.setString(2, lastName);
+                prep.setInt(3, age);
+                prep.setString(4, sex);
+                prep.setString(5, contact);
+                prep.setString(6, email);
+                prep.setString(7, address);
+                prep.setString(8, role);
+                prep.setString(9, password);
+                prep.executeUpdate();
+
+                if (isReader) {
+                    loadReaders();
+                } else {
+                    loadLibrarians();
+                }
+                dispose();
+            } catch (NumberFormatException ex) {
+                JOptionPane.showMessageDialog(this, "Age must be a number.", "Validation Error", JOptionPane.ERROR_MESSAGE);
+            } catch (SQLException ex) {
+                ex.printStackTrace();
+                JOptionPane.showMessageDialog(this, "Error adding user.", "Database Error", JOptionPane.ERROR_MESSAGE);
+            }
+        }
+    }
+
+    // Inner class for the add book dialog
+    @SuppressWarnings("serial")
+	class AddBookDialog extends JDialog {
+        private JTextField nameField;
+        private JTextField authorField;
+        private JTextField categoryField;
+        private JButton addButton;
+        private JButton cancelButton;
+
+        public AddBookDialog(JFrame parent, String title, boolean modal) {
+            super(parent, title, modal);
+
+            nameField = new JTextField(30);
+            authorField = new JTextField(30);
+            categoryField = new JTextField(30);
+            addButton = new JButton("Add");
+            cancelButton = new JButton("Cancel");
+
+            setLayout(new GridLayout(4, 2, 10, 10));
+            add(new JLabel("Name:"));
+            add(nameField);
+            add(new JLabel("Author:"));
+            add(authorField);
+            add(new JLabel("Category:"));
+            add(categoryField);
+            add(addButton);
+            add(cancelButton);
+
+            addButton.addActionListener(e -> onAdd());
+            cancelButton.addActionListener(e -> dispose());
+
+            pack();
+            setLocationRelativeTo(parent);
+        }
+
+        private void onAdd() {
+            String bookName = nameField.getText();
+            String bookAuthor = authorField.getText();
+            String bookCategory = categoryField.getText();
+
+            if (bookName.isEmpty() || bookAuthor.isEmpty() || bookCategory.isEmpty()) {
+                JOptionPane.showMessageDialog(this, "All fields are required.", "Validation Error", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+
+            try {
+                String query = "INSERT INTO books (book_name, book_author, issue_date, book_category) VALUES (?, ?, ?, ?)";
+                PreparedStatement prep = dbConnect.con.prepareStatement(query);
+                prep.setString(1, bookName);
+                prep.setString(2, bookAuthor);
+                prep.setDate(3, new java.sql.Date(System.currentTimeMillis())); // Use current date for issue_date
+                prep.setString(4, bookCategory);
+                prep.executeUpdate();
+                
+                JOptionPane.showMessageDialog(this, "Book added successfully!", "Success", JOptionPane.INFORMATION_MESSAGE);
+                loadBooks();
+                dispose();
+                
+            } catch (SQLException ex) {
+                ex.printStackTrace();
+                JOptionPane.showMessageDialog(this, "Error adding book.", "Database Error", JOptionPane.ERROR_MESSAGE);
+            }
+        }
+    }
+
+    // Inner class for the edit book dialog
+    class EditBookDialog extends JDialog {
+        private JTextField nameField;
+        private JTextField authorField;
+        private JTextField categoryField;
+        private JButton saveButton;
+        private JButton cancelButton;
+        private int bookId;
+
+        public EditBookDialog(JFrame parent, String title, boolean modal, int bookId, String name, String author, String category) {
+            super(parent, title, modal);
+            this.bookId = bookId;
+
+            nameField = new JTextField(name, 30);
+            authorField = new JTextField(author, 30);
+            categoryField = new JTextField(category, 30);
+            saveButton = new JButton("Save");
+            cancelButton = new JButton("Cancel");
+
+            setLayout(new GridLayout(4, 2, 10, 10));
+            add(new JLabel("Name:"));
+            add(nameField);
+            add(new JLabel("Author:"));
+            add(authorField);
+            add(new JLabel("Category:"));
+            add(categoryField);
+            add(saveButton);
+            add(cancelButton);
+
+            saveButton.addActionListener(e -> onSave());
+            cancelButton.addActionListener(e -> dispose());
+
+            pack();
+            setLocationRelativeTo(parent);
+        }
+
+        private void onSave() {
             try {
                 String query = "UPDATE books SET book_name = ?, book_author = ?, book_category = ? WHERE book_id = ?";
-                PreparedStatement pst = db.con.prepareStatement(query);
-                pst.setString(1, nameField.getText());
-                pst.setString(2, authorField.getText());
-                pst.setString(3, categoryField.getText());
-                pst.setInt(4, bookId);
-                pst.executeUpdate();
-                loadBooks("");
-            } catch (SQLException e) {
-                e.printStackTrace();
+                PreparedStatement prep = dbConnect.con.prepareStatement(query);
+                prep.setString(1, nameField.getText());
+                prep.setString(2, authorField.getText());
+                prep.setString(3, categoryField.getText());
+                prep.setInt(4, bookId);
+                prep.executeUpdate();
+
+                loadBooks();
+                dispose();
+            } catch (SQLException ex) {
+                ex.printStackTrace();
+                JOptionPane.showMessageDialog(this, "Error updating book.", "Database Error", JOptionPane.ERROR_MESSAGE);
             }
         }
-    }
-
-    private void deleteBook(int bookId) {
-        int option = JOptionPane.showConfirmDialog(null, "Are you sure you want to delete this book?", "Delete Book", JOptionPane.YES_NO_OPTION);
-        if (option == JOptionPane.YES_OPTION) {
-            try {
-                String query = "DELETE FROM books WHERE book_id = ?";
-                PreparedStatement pst = db.con.prepareStatement(query);
-                pst.setInt(1, bookId);
-                pst.executeUpdate();
-                loadBooks("");
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
-        }
-    }
-
-    private void loadAccounts(String role, String searchTerm) {
-        JPanel contentPanel = role.equals("reader") ? readersContentPanel : librariansContentPanel;
-        contentPanel.removeAll();
-        try {
-            String query = "SELECT account_id, first_name, last_name, email, contact_number FROM account WHERE role = ? AND (first_name LIKE ? OR last_name LIKE ? OR email LIKE ?)";
-            PreparedStatement pst = db.con.prepareStatement(query);
-            pst.setString(1, role);
-            pst.setString(2, "%" + searchTerm + "%");
-            pst.setString(3, "%" + searchTerm + "%");
-            pst.setString(4, "%" + searchTerm + "%");
-            ResultSet rs = pst.executeQuery();
-            while (rs.next()) {
-                int accountId = rs.getInt("account_id");
-                String firstName = rs.getString("first_name");
-                String lastName = rs.getString("last_name");
-                String email = rs.getString("email");
-                String phone = rs.getString("contact_number");
-                contentPanel.add(createAccountCard(accountId, firstName, lastName, email, phone, role));
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        contentPanel.revalidate();
-        contentPanel.repaint();
-    }
-    
-    private JPanel createAccountCard(int accountId, String firstName, String lastName, String email, String phone, String role) {
-        JPanel card = new JPanel(new BorderLayout());
-        card.setBorder(BorderFactory.createLineBorder(Color.GRAY, 1));
-
-        JPanel detailsPanel = new JPanel();
-        detailsPanel.setLayout(new BoxLayout(detailsPanel, BoxLayout.Y_AXIS));
-        detailsPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
-        detailsPanel.add(new JLabel("ID: " + accountId));
-        detailsPanel.add(new JLabel("Name: " + firstName + " " + lastName));
-        detailsPanel.add(new JLabel("Email: " + email));
-        detailsPanel.add(new JLabel("Phone: " + phone));
-        card.add(detailsPanel, BorderLayout.CENTER);
-
-        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        JButton updateButton = new JButton("Update");
-        updateButton.addActionListener(e -> updateAccount(role, accountId, firstName, lastName, email, phone));
-        JButton deleteButton = new JButton("Delete");
-        deleteButton.addActionListener(e -> deleteAccount(role, accountId));
-        buttonPanel.add(updateButton);
-        buttonPanel.add(deleteButton);
-        card.add(buttonPanel, BorderLayout.SOUTH);
-
-        return card;
-    }
-
-    private void addAccount(String role) {
-        JTextField firstNameField = new JTextField();
-        JTextField lastNameField = new JTextField();
-        JTextField emailField = new JTextField();
-        JTextField phoneField = new JTextField();
-        JTextField passwordField = new JTextField();
-        Object[] message = {
-                "First Name:", firstNameField,
-                "Last Name:", lastNameField,
-                "Email:", emailField,
-                "Phone:", phoneField,
-                "Password:", passwordField
-        };
-        int option = JOptionPane.showConfirmDialog(null, message, "Add New " + capitalize(role), JOptionPane.OK_CANCEL_OPTION);
-        if (option == JOptionPane.OK_OPTION) {
-            try {
-                String query = "INSERT INTO account (first_name, last_name, email, contact_number, password, role, age, sex, address) VALUES (?, ?, ?, ?, ?, ?, 0, 'MALE', '')";
-                PreparedStatement pst = db.con.prepareStatement(query);
-                pst.setString(1, firstNameField.getText());
-                pst.setString(2, lastNameField.getText());
-                pst.setString(3, emailField.getText());
-                pst.setString(4, phoneField.getText());
-                pst.setString(5, passwordField.getText());
-                pst.setString(6, role);
-                pst.executeUpdate();
-                loadAccounts(role, "");
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
-        }
-    }
-
-    private JPanel createProfilePanel() { // New Profile Panel Method
-        JPanel panel = new JPanel(new BorderLayout());
-        panel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
-
-        JLabel profileTitle = new JLabel("User Profile", SwingConstants.CENTER);
-        profileTitle.setFont(new Font("Arial", Font.BOLD, 24));
-        panel.add(profileTitle, BorderLayout.NORTH);
-
-        JPanel detailsPanel = new JPanel();
-        detailsPanel.setLayout(new BoxLayout(detailsPanel, BoxLayout.Y_AXIS));
-        detailsPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
-
-        JLabel nameLabel = new JLabel("Logged in as: " + loggedInUserName);
-        nameLabel.setFont(new Font("Arial", Font.PLAIN, 18));
-        nameLabel.setAlignmentX(JComponent.CENTER_ALIGNMENT);
-        detailsPanel.add(nameLabel);
-        
-        detailsPanel.add(Box.createRigidArea(new Dimension(0, 20)));
-
-        JButton logoutButton = new JButton("Logout");
-        logoutButton.setFont(new Font("Arial", Font.BOLD, 16));
-        logoutButton.setAlignmentX(JComponent.CENTER_ALIGNMENT);
-        logoutButton.addActionListener(e -> {
-            frame.dispose();
-            Login loginFrame = new Login();
-            loginFrame.setVisible(true);
-        });
-        detailsPanel.add(logoutButton);
-        
-        detailsPanel.add(Box.createVerticalGlue());
-
-        panel.add(detailsPanel, BorderLayout.CENTER);
-        return panel;
-    }
-
-    private void updateAccount(String role, int accountId, String currentFirstName, String currentLastName, String currentEmail, String currentPhone) {
-        JTextField firstNameField = new JTextField(currentFirstName);
-        JTextField lastNameField = new JTextField(currentLastName);
-        JTextField emailField = new JTextField(currentEmail);
-        JTextField phoneField = new JTextField(currentPhone);
-        Object[] message = {
-                "First Name:", firstNameField,
-                "Last Name:", lastNameField,
-                "Email:", emailField,
-                "Phone:", phoneField
-        };
-        int option = JOptionPane.showConfirmDialog(null, message, "Update " + capitalize(role), JOptionPane.OK_CANCEL_OPTION);
-        if (option == JOptionPane.OK_OPTION) {
-            try {
-                String query = "UPDATE account SET first_name = ?, last_name = ?, email = ?, contact_number = ? WHERE account_id = ?";
-                PreparedStatement pst = db.con.prepareStatement(query);
-                pst.setString(1, firstNameField.getText());
-                pst.setString(2, lastNameField.getText());
-                pst.setString(3, emailField.getText());
-                pst.setString(4, phoneField.getText());
-                pst.setInt(5, accountId);
-                pst.executeUpdate();
-                loadAccounts(role, "");
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
-        }
-    }
-
-    private void deleteAccount(String role, int accountId) {
-        int option = JOptionPane.showConfirmDialog(null, "Are you sure you want to delete this account?", "Delete Account", JOptionPane.YES_NO_OPTION);
-        if (option == JOptionPane.YES_OPTION) {
-            try {
-                String query = "DELETE FROM account WHERE account_id = ?";
-                PreparedStatement pst = db.con.prepareStatement(query);
-                pst.setInt(1, accountId);
-                pst.executeUpdate();
-                loadAccounts(role, "");
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
-        }
-    }
-
-    private void toggleTheme() {
-        isDarkMode = !isDarkMode;
-        updateTheme();
-    }
-
-    private void updateTheme() {
-        try {
-            if (isDarkMode) {
-                UIManager.setLookAndFeel(new FlatDarkLaf());
-            } else {
-                UIManager.setLookAndFeel(new FlatLightLaf());
-            }
-            SwingUtilities.updateComponentTreeUI(frame);
-
-            // Manually apply/reset custom sidebar colors
-            if (isDarkMode) {
-                Color bgColor = new Color(23, 35, 51);
-                Color fgColor = Color.WHITE;
-                sidebar.setBackground(bgColor);
-                for (Component comp : sidebar.getComponents()) {
-                    if (comp instanceof JLabel || comp instanceof JButton) {
-                        comp.setForeground(fgColor);
-                    }
-                    if (comp instanceof JButton) {
-                        comp.setBackground(bgColor);
-                        ((JButton) comp).setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
-                    }
-                }
-            } else {
-                // Reset to L&F defaults for light mode
-                sidebar.setBackground(UIManager.getColor("Panel.background"));
-                for (Component comp : sidebar.getComponents()) {
-                    if (comp instanceof JLabel) {
-                        comp.setForeground(UIManager.getColor("Label.foreground"));
-                    } else if (comp instanceof JButton) {
-                        comp.setForeground(UIManager.getColor("Button.foreground"));
-                        comp.setBackground(UIManager.getColor("Button.background"));
-                        ((JButton) comp).setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
-                    }
-                }
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
-    private String capitalize(String str) {
-        if (str == null || str.isEmpty()) {
-            return str;
-        }
-        return str.substring(0, 1).toUpperCase() + str.substring(1);
-    }
-
-    public JFrame getFrame() {
-        return frame;
-    }
-
-    public void setFrame(JFrame frame) {
-        this.frame = frame;
     }
 }

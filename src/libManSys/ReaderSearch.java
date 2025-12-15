@@ -52,6 +52,7 @@ public class ReaderSearch extends JFrame {
     public static void main(String[] args) {
         EventQueue.invokeLater(() -> {
             try {
+            	UIManager.setLookAndFeel(new FlatIntelliJLaf());
                 ReaderSearch frame = new ReaderSearch("otelo.nobleza@example.com");
                 frame.setVisible(true);
             } catch (Exception e) {
