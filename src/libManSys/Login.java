@@ -21,6 +21,7 @@ import javax.swing.JPanel;
 import javax.swing.JPasswordField;
 import javax.swing.JTextField;
 import javax.swing.SwingConstants;
+import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 
 import com.formdev.flatlaf.*;
@@ -33,12 +34,15 @@ public class Login extends JFrame {
     private JPasswordField pwdPassword;
     private DbConnect dbCon = new DbConnect();
     private BufferedImage logoImage;
+    private boolean isDarkMode = false;
 
     public static void main(String[] args) {
         EventQueue.invokeLater(new Runnable() {
             public void run() {
                 try {
-                	UIManager.setLookAndFeel(new FlatIntelliJLaf());
+                	// Initial Look and Feel handled in constructor/updateTheme
+                	// But for main entry point, let's start with Light to match updateTheme default
+                	UIManager.setLookAndFeel(new FlatLightLaf());
                     Login frame = new Login();
                     frame.setVisible(true);
                 } catch (Exception e) {
@@ -118,6 +122,38 @@ public class Login extends JFrame {
                 login(new LibraryAccount());
             }
         });
+        
+        // Toggle Theme Button
+        JButton btnToggleTheme = new JButton("Toggle Theme");
+        btnToggleTheme.setFont(new Font("Arial", Font.PLAIN, 12));
+        btnToggleTheme.setBounds(310, 10, 114, 30);
+        loginPanel.add(btnToggleTheme);
+        
+        btnToggleTheme.addActionListener(e -> toggleTheme());
+        
+        // Initialize theme
+        updateTheme();
+    }
+    
+    private void toggleTheme() {
+        isDarkMode = !isDarkMode;
+        updateTheme();
+    }
+
+    private void updateTheme() {
+        try {
+            if (isDarkMode) {
+                UIManager.setLookAndFeel(new FlatDarkLaf());
+            } else {
+                UIManager.setLookAndFeel(new FlatLightLaf());
+            }
+            SwingUtilities.updateComponentTreeUI(this);
+            
+            // Re-apply explicit font styles if necessary, but FlatLaf usually handles standard components well.
+            // The paintComponent logic for logoPanel remains same.
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     public void login(LibraryAccount account) {
@@ -169,4 +205,3 @@ public class Login extends JFrame {
         }
     }
 	}
-	

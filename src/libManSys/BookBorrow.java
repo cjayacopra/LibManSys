@@ -142,14 +142,15 @@ public class BookBorrow extends JFrame {
             contactPst.close();
 
             // Insert borrow transaction
-            String sql = "INSERT INTO transactions (transaction_type, book_id, book_name, account_id, contact_number, email) " +
-                         "VALUES ('borrow', ?, ?, ?, ?, ?)";
+            String sql = "INSERT INTO transactions (transaction_type, book_id, book_name, account_id, contact_number, email, `date`) " +
+                         "VALUES ('borrow', ?, ?, ?, ?, ?, ?)";
             PreparedStatement pst = conn.prepareStatement(sql);
             pst.setInt(1, bookId);
             pst.setString(2, bookName);
             pst.setInt(3, accountId);
             pst.setString(4, contactNumber);
             pst.setString(5, email);
+            pst.setDate(6, new java.sql.Date(System.currentTimeMillis()));
 
             int result = pst.executeUpdate();
 

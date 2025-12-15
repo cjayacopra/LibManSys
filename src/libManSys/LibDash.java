@@ -38,6 +38,7 @@ import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.RowFilter;
 import javax.swing.SwingConstants;
+import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
@@ -59,11 +60,13 @@ public class LibDash {
     private Map<String, TableRowSorter<DefaultTableModel>> sorters = new HashMap<>();
     private String currentCard;
     private DbConnect dbConnect;
+    private boolean isDarkMode = false;
 
     public static void main(String[] args) {
         EventQueue.invokeLater(() -> {
             try {
-                UIManager.setLookAndFeel(new FlatIntelliJLaf());
+                // Initial look and feel will be set in updateTheme()
+                UIManager.setLookAndFeel(new FlatLightLaf());
                 LibDash window = new LibDash("Allison");
             } catch (Exception e) {
                 e.printStackTrace();
@@ -107,6 +110,8 @@ public class LibDash {
         
         cardLayout.show(mainPanel, "Dashboard");
         setActiveButton(menuButtons.get("Dashboard"));
+        
+        updateTheme();
         frame.setVisible(true);
     }
 
@@ -117,7 +122,7 @@ public class LibDash {
         sidebar.setBackground(new Color(248, 249, 250));
         sidebar.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
-        JLabel logoLabel = new JLabel("Library", SwingConstants.CENTER);
+        JLabel logoLabel = new JLabel("LIBRARIAN", SwingConstants.CENTER);
         logoLabel.setFont(new Font("Arial", Font.BOLD, 24));
         logoLabel.setAlignmentX(JComponent.CENTER_ALIGNMENT);
         logoLabel.setForeground(new Color(25, 25, 112));
@@ -132,6 +137,14 @@ public class LibDash {
         addMenuButton("Check-out Books", "Check-out Books");
 
         sidebar.add(javax.swing.Box.createVerticalGlue());
+
+        // Theme Toggle Button
+        JButton themeToggleButton = new JButton("Toggle Theme");
+        styleMenuButton(themeToggleButton);
+        themeToggleButton.addActionListener(e -> toggleTheme());
+        sidebar.add(themeToggleButton);
+        
+        sidebar.add(javax.swing.Box.createRigidArea(new Dimension(0, 10)));
 
         JButton logoutButton = new JButton("Logout");
         styleMenuButton(logoutButton);
@@ -159,7 +172,11 @@ public class LibDash {
     
     private void setActiveButton(JButton button) {
         if (activeMenuButton != null) {
-            styleMenuButton(activeMenuButton);
+            // Reset style of previously active button
+            Color sidebarBg = isDarkMode ? new Color(23, 35, 51) : new Color(248, 249, 250);
+            Color fgColor = isDarkMode ? Color.WHITE : new Color(50, 50, 50);
+            activeMenuButton.setBackground(sidebarBg);
+            activeMenuButton.setForeground(fgColor);
         }
         activeMenuButton = button;
         activeMenuButton.setBackground(new Color(46, 139, 87));
@@ -168,18 +185,70 @@ public class LibDash {
 
     private void styleMenuButton(JButton button) {
         button.setFont(new Font("Arial", Font.PLAIN, 16));
-        button.setBackground(new Color(248, 249, 250));
-        button.setForeground(new Color(50, 50, 50));
         button.setFocusPainted(false);
         button.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
         button.setHorizontalAlignment(SwingConstants.LEFT);
         button.setAlignmentX(JComponent.CENTER_ALIGNMENT);
         button.setMaximumSize(new Dimension(Integer.MAX_VALUE, button.getPreferredSize().height));
+        
+        // Initial colors will be set by updateTheme, but setting defaults here
+        button.setBackground(new Color(248, 249, 250));
+        button.setForeground(new Color(50, 50, 50));
+    }
+    
+    private void toggleTheme() {
+        isDarkMode = !isDarkMode;
+        updateTheme();
+    }
+
+    private void updateTheme() {
+        try {
+            if (isDarkMode) {
+                UIManager.setLookAndFeel(new FlatDarkLaf());
+            } else {
+                UIManager.setLookAndFeel(new FlatLightLaf());
+            }
+            SwingUtilities.updateComponentTreeUI(frame);
+
+            // Apply custom sidebar colors
+            Color sidebarBg = isDarkMode ? new Color(23, 35, 51) : new Color(248, 249, 250);
+            Color fgColor = isDarkMode ? Color.WHITE : new Color(50, 50, 50);
+            
+            sidebar.setBackground(sidebarBg);
+            
+            for (Component comp : sidebar.getComponents()) {
+                if (comp instanceof JLabel) {
+                    comp.setForeground(fgColor);
+                }
+                
+                if (comp instanceof JButton) {
+                    JButton btn = (JButton) comp;
+                    // Don't change active button background, but update others
+                    if (btn != activeMenuButton) {
+                         btn.setBackground(sidebarBg);
+                         btn.setForeground(fgColor);
+                    } else {
+                        // Ensure active button styling is preserved/restored
+                        btn.setBackground(new Color(46, 139, 87));
+                        btn.setForeground(Color.WHITE);
+                    }
+                }
+            }
+            
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     private JPanel createTopBar(String userName) {
         JPanel topBar = new JPanel(new GridBagLayout());
-        topBar.setBackground(Color.WHITE);
+        topBar.setBackground(Color.WHITE); // This might need theme adjustment or be removed to let Laf handle it
+        // Removing explicit background here to let FlatLaf handle it or explicitly setting it in updateTheme if needed.
+        // For now, I'll set it null to inherit from Laf or handle it. 
+        // Actually, creating it inside updateTheme is hard. 
+        // Let's rely on FlatLaf defaults which will change panel backgrounds.
+        topBar.setBackground(null); 
+        
         topBar.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, new Color(220, 220, 220)));
 
         // Constraints for the search field
@@ -231,7 +300,7 @@ public class LibDash {
         JPanel panel = new JPanel(new BorderLayout(10, 10));
         panel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
-        JPanel topCardsPanel = new JPanel(new GridLayout(2, 4, 10, 10));
+        JPanel topCardsPanel = new JPanel(new GridLayout(1, 2, 10, 10));
         
         int borrowedBooks = getMetricValue("SELECT COUNT(*) FROM transactions WHERE transaction_type = 'borrow'");
         topCardsPanel.add(createMetricCard("Borrowed Books", String.valueOf(borrowedBooks), "+23%"));
@@ -239,50 +308,9 @@ public class LibDash {
         int returnedBooks = getMetricValue("SELECT COUNT(*) FROM transactions WHERE transaction_type = 'return'");
         topCardsPanel.add(createMetricCard("Returned Books", String.valueOf(returnedBooks), "+10%"));
         
-        topCardsPanel.add(createMetricCard("Overdue Books", "12", "-5%"));
-        topCardsPanel.add(createMetricCard("Missing Books", "3", "+1%"));
-        
-        int totalBooks = getMetricValue("SELECT COUNT(*) FROM books");
-        topCardsPanel.add(createMetricCard("Total Books", String.valueOf(totalBooks), ""));
-
-        topCardsPanel.add(createMetricCard("Visitors", "2,345", ""));
-        
-        int totalMembers = getMetricValue("SELECT COUNT(*) FROM account WHERE role = 'reader'");
-        topCardsPanel.add(createMetricCard("New Members", String.valueOf(totalMembers), ""));
-        
-        topCardsPanel.add(createMetricCard("Pending Fees", "$540", ""));
         panel.add(topCardsPanel, BorderLayout.NORTH);
-
-        JPanel centerContent = new JPanel(new GridLayout(2,1,10,10));
-        centerContent.setOpaque(false);
-        JPanel chartPanel = new JPanel(new BorderLayout());
-        chartPanel.setBorder(BorderFactory.createTitledBorder("Check-out Statistics"));
-        chartPanel.add(new JLabel("Chart will be here (requires a library like JFreeChart).", SwingConstants.CENTER));
-        centerContent.add(chartPanel);
         
-        String[] overdueColumns = {"Member ID", "Title", "ISBN", "Due Date", "Fine"};
-        JTable overdueTable = new JTable(new DefaultTableModel(overdueColumns, 0));
-        overdueTable.setFillsViewportHeight(true);
-        JScrollPane overdueScrollPane = new JScrollPane(overdueTable);
-        overdueScrollPane.setBorder(BorderFactory.createTitledBorder("Overdue Books History"));
-        centerContent.add(overdueScrollPane);
-
-        JPanel topBooksPanel = new JPanel(new BorderLayout());
-        topBooksPanel.setBorder(BorderFactory.createTitledBorder("Top Books"));
-        
-        String[] topBooksColumns = {"Title", "Author", "Times Borrowed"};
-        DefaultTableModel topBooksModel = new DefaultTableModel(topBooksColumns, 0);
-        topBooksTable = new JTable(topBooksModel);
-        topBooksTable.setFillsViewportHeight(true);
-        topBooksPanel.add(new JScrollPane(topBooksTable), BorderLayout.CENTER);
-        loadTopBooks();
-        topBooksPanel.setPreferredSize(new Dimension(250, 0));
-
-        JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, centerContent, topBooksPanel);
-        splitPane.setResizeWeight(0.8);
-        panel.add(splitPane, BorderLayout.CENTER);
-
-        String[] recentColumns = {"ID", "ISBN", "Title", "Author", "Member", "Issued Date", "Return Date", "Status"};
+        String[] recentColumns = {"ID", "Title", "Author", "Member", "Issued Date", "Return Date", "Status"};
         DefaultTableModel recentModel = new DefaultTableModel(recentColumns, 0);
         recentCheckOutsTable = new JTable(recentModel);
         recentCheckOutsTable.setFillsViewportHeight(true);
@@ -331,17 +359,30 @@ public class LibDash {
         DefaultTableModel model = (DefaultTableModel) recentCheckOutsTable.getModel();
         model.setRowCount(0); // Clear existing data
         try {
-            String query = "SELECT t.transaction_id, t.book_name, b.book_author, a.first_name, a.last_name, t.transaction_type FROM transactions t JOIN books b ON t.book_id = b.book_id JOIN account a ON t.account_id = a.account_id ORDER BY t.transaction_id DESC LIMIT 10";
+            String query = "SELECT t.transaction_id, t.book_name AS trans_book_name, b.book_author AS book_author_name, a.first_name, a.last_name, t.transaction_type, t.date AS trans_date FROM transactions t JOIN books b ON t.book_id = b.book_id JOIN account a ON t.account_id = a.account_id ORDER BY t.transaction_id DESC LIMIT 10";
             PreparedStatement prep = dbConnect.con.prepareStatement(query);
             ResultSet result = prep.executeQuery();
             while (result.next()) {
                 String id = "T" + String.format("%03d", result.getInt("transaction_id"));
-                String title = result.getString("book_name");
-                String author = result.getString("book_author");
+                String title = result.getString("trans_book_name");
+                String author = result.getString("book_author_name");
                 String member = result.getString("first_name") + " " + result.getString("last_name");
                 String status = result.getString("transaction_type");
                 
-                model.addRow(new Object[]{id, "", title, author, member, "", "", status}); // ISBN, Issued Date, Return Date are blank as per schema limitations
+                // Use getString to avoid SQLException for "0000-00-00" dates
+                String date = result.getString("trans_date");
+                if (date == null) date = "";
+                
+                String issuedDate = "";
+                String returnDate = "";
+                
+                if ("borrow".equalsIgnoreCase(status)) {
+                    issuedDate = date;
+                } else if ("return".equalsIgnoreCase(status)) {
+                    returnDate = date;
+                }
+                
+                model.addRow(new Object[]{id, title, author, member, issuedDate, returnDate, status});
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -360,7 +401,22 @@ public class LibDash {
             BorderFactory.createLineBorder(new Color(220, 220, 220)),
             BorderFactory.createEmptyBorder(10, 10, 10, 10)
         ));
-        card.setBackground(Color.WHITE);
+        // Using null background to respect Laf, or explicit white for card effect?
+        // Card effect usually implies white background on light theme, and dark on dark.
+        // Let's rely on updateTheme or just set it based on mode if possible.
+        // But metric cards are re-created? No, they are created once in createDashboardScreen.
+        // So I should let them inherit or handle in updateTheme if I track them.
+        // Since I don't track them individually in a list, I will let them be simple panels.
+        // Or I can force them to be white in light mode and dark in dark mode.
+        // For now, let's leave explicit White, but it might look odd in Dark Mode.
+        // I will remove explicit Color.WHITE and let FlatLaf handle panel background.
+        // But 'card' look usually needs distinction.
+        // I will use a simple trick: if I don't track them, they won't update color dynamically unless I traverse component tree.
+        // SwingUtilities.updateComponentTreeUI handles basic components, but if I hardcoded Color.WHITE, it won't change.
+        // I should use `card.setBackground(null)` or not set it. 
+        // However, the border logic suggests a specific look.
+        // I will set it to null to be safe for now, or use UIManager.getColor("Panel.background").
+        card.setBackground(null);
         
         JLabel titleLabel = new JLabel(title);
         titleLabel.setFont(new Font("Arial", Font.BOLD, 14));
@@ -398,8 +454,6 @@ public class LibDash {
         headerPanel.add(titlePanel, BorderLayout.WEST);
         
         JPanel buttonsPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        JTextField searchField = new JTextField("Reader Search", 20);
-        buttonsPanel.add(searchField);
         JButton addButton = new JButton("Add Readers");
         addButton.setBackground(new Color(46, 139, 87));
         addButton.setForeground(Color.WHITE);
@@ -420,24 +474,6 @@ public class LibDash {
         TableRowSorter<DefaultTableModel> sorter = new TableRowSorter<>(model);
         readersTable.setRowSorter(sorter);
         sorters.put("Readers", sorter);
-
-        searchField.getDocument().addDocumentListener(new DocumentListener() {
-            @Override
-            public void insertUpdate(DocumentEvent e) {
-                filterTable();
-            }
-            @Override
-            public void removeUpdate(DocumentEvent e) {
-                filterTable();
-            }
-            @Override
-            public void changedUpdate(DocumentEvent e) {
-                filterTable();
-            }
-            private void filterTable() {
-                sorter.setRowFilter(RowFilter.regexFilter("(?i)" + searchField.getText()));
-            }
-        });
 
         readersTable.getColumnModel().getColumn(3).setCellRenderer(new ActionPanel());
         readersTable.getColumnModel().getColumn(3).setCellEditor(new ActionCellEditor(readersTable));
@@ -483,8 +519,6 @@ public class LibDash {
         headerPanel.add(titlePanel, BorderLayout.WEST);
         
         JPanel buttonsPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        JTextField searchField = new JTextField("Librarian Search", 20);
-        buttonsPanel.add(searchField);
         JButton addButton = new JButton("Add Librarians");
         addButton.setBackground(new Color(46, 139, 87));
         addButton.setForeground(Color.WHITE);
@@ -505,24 +539,6 @@ public class LibDash {
         TableRowSorter<DefaultTableModel> sorter = new TableRowSorter<>(model);
         librariansTable.setRowSorter(sorter);
         sorters.put("Librarians", sorter);
-
-        searchField.getDocument().addDocumentListener(new DocumentListener() {
-            @Override
-            public void insertUpdate(DocumentEvent e) {
-                filterTable();
-            }
-            @Override
-            public void removeUpdate(DocumentEvent e) {
-                filterTable();
-            }
-            @Override
-            public void changedUpdate(DocumentEvent e) {
-                filterTable();
-            }
-            private void filterTable() {
-                sorter.setRowFilter(RowFilter.regexFilter("(?i)" + searchField.getText()));
-            }
-        });
 
         librariansTable.getColumnModel().getColumn(3).setCellRenderer(new ActionPanel());
         librariansTable.getColumnModel().getColumn(3).setCellEditor(new ActionCellEditor(librariansTable));
@@ -570,8 +586,6 @@ public class LibDash {
         headerPanel.add(titlePanel, BorderLayout.WEST);
         
         JPanel buttonsPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        JTextField searchField = new JTextField("Book Search", 20);
-        buttonsPanel.add(searchField);
         JButton addButton = new JButton("Add Book");
         addButton.setBackground(new Color(46, 139, 87));
         addButton.setForeground(Color.WHITE);
@@ -592,24 +606,6 @@ public class LibDash {
         TableRowSorter<DefaultTableModel> sorter = new TableRowSorter<>(model);
         booksTable.setRowSorter(sorter);
         sorters.put("Books", sorter);
-
-        searchField.getDocument().addDocumentListener(new DocumentListener() {
-            @Override
-            public void insertUpdate(DocumentEvent e) {
-                filterTable();
-            }
-            @Override
-            public void removeUpdate(DocumentEvent e) {
-                filterTable();
-            }
-            @Override
-            public void changedUpdate(DocumentEvent e) {
-                filterTable();
-            }
-            private void filterTable() {
-                sorter.setRowFilter(RowFilter.regexFilter("(?i)" + searchField.getText()));
-            }
-        });
 
         booksTable.getColumnModel().getColumn(4).setCellRenderer(new ActionPanel());
         booksTable.getColumnModel().getColumn(4).setCellEditor(new ActionCellEditor(booksTable));
@@ -646,13 +642,13 @@ public class LibDash {
         
         JPanel headerPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         JTextField searchField = new JTextField("Search...", 30);
-        String[] filters = {"ISBN", "Title", "Author", "Member"};
+        String[] filters = {"Title", "Author", "Member"};
         JComboBox<String> filterComboBox = new JComboBox<>(filters);
         headerPanel.add(searchField);
         headerPanel.add(filterComboBox);
         panel.add(headerPanel, BorderLayout.NORTH);
 
-        String[] columns = {"Member ID", "ISBN", "Title", "Author", "Borrowed Date", "Returned Date", "Status", "Action"};
+        String[] columns = {"Member ID", "Title", "Author", "Borrowed Date", "Returned Date", "Status", "Action"};
         DefaultTableModel model = new DefaultTableModel(columns, 0);
         checkOutTable = new JTable(model);
         checkOutTable.setFillsViewportHeight(true);
@@ -668,16 +664,29 @@ public class LibDash {
         DefaultTableModel model = (DefaultTableModel) checkOutTable.getModel();
         model.setRowCount(0);
         try {
-            String query = "SELECT t.account_id, t.book_name, b.book_author, t.transaction_type FROM transactions t JOIN books b ON t.book_id = b.book_id";
+            String query = "SELECT t.account_id, t.book_name AS trans_book_name, b.book_author AS book_author_name, t.transaction_type, t.date AS trans_date FROM transactions t JOIN books b ON t.book_id = b.book_id";
             PreparedStatement prep = dbConnect.con.prepareStatement(query);
             ResultSet result = prep.executeQuery();
             while (result.next()) {
                 String memberId = "M" + String.format("%03d", result.getInt("account_id"));
-                String title = result.getString("book_name");
-                String author = result.getString("book_author");
+                String title = result.getString("trans_book_name");
+                String author = result.getString("book_author_name");
                 String status = result.getString("transaction_type");
                 
-                model.addRow(new Object[]{memberId, "", title, author, "", "", status, "Return / Renew"});
+                // Use getString to avoid SQLException for "0000-00-00" dates
+                String date = result.getString("trans_date");
+                if (date == null) date = "";
+                
+                String borrowedDate = "";
+                String returnedDate = "";
+                
+                if ("borrow".equalsIgnoreCase(status)) {
+                    borrowedDate = date;
+                } else if ("return".equalsIgnoreCase(status)) {
+                    returnedDate = date;
+                }
+                
+                model.addRow(new Object[]{memberId, title, author, borrowedDate, returnedDate, status, "Return / Renew"});
             }
         } catch (SQLException e) {
             e.printStackTrace();
