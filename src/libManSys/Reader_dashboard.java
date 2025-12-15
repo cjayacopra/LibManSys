@@ -119,7 +119,7 @@ public class Reader_dashboard extends JFrame {
     }
 
     private void initialize() {
-        setTitle("Reader Dashboard - LibManSys");
+        setTitle("Reader Dashboard");
         setBounds(100, 100, 1200, 700);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
@@ -162,17 +162,12 @@ public class Reader_dashboard extends JFrame {
         sidebar.setPreferredSize(new Dimension(220, 0));
         sidebar.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
-        JLabel titleLabel = new JLabel("LibManSys");
+        JLabel titleLabel = new JLabel("READER");
         titleLabel.setFont(new Font("Arial", Font.BOLD, 28));
         titleLabel.setAlignmentX(JComponent.CENTER_ALIGNMENT);
         sidebar.add(titleLabel);
 
         sidebar.add(Box.createRigidArea(new Dimension(0, 10)));
-
-        JLabel subtitleLabel = new JLabel("Reader Portal");
-        subtitleLabel.setFont(new Font("Arial", Font.PLAIN, 14));
-        subtitleLabel.setAlignmentX(JComponent.CENTER_ALIGNMENT);
-        sidebar.add(subtitleLabel);
 
         sidebar.add(Box.createRigidArea(new Dimension(0, 30)));
 
@@ -510,14 +505,15 @@ public class Reader_dashboard extends JFrame {
             contactPst.close();
             
             // Insert return transaction
-            String sql = "INSERT INTO transactions (transaction_type, book_id, book_name, account_id, contact_number, email) " +
-                         "VALUES ('return', ?, ?, ?, ?, ?)";
+            String sql = "INSERT INTO transactions (transaction_type, book_id, book_name, account_id, contact_number, email, `date`) " +
+                         "VALUES ('return', ?, ?, ?, ?, ?, ?)";
             PreparedStatement pst = conn.prepareStatement(sql);
             pst.setInt(1, bookId);
             pst.setString(2, bookName);
             pst.setInt(3, accountId);
             pst.setString(4, contactNumber);
             pst.setString(5, email);
+            pst.setDate(6, new java.sql.Date(System.currentTimeMillis()));
             
             int result = pst.executeUpdate();
             
