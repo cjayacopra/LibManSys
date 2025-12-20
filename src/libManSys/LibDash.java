@@ -85,6 +85,15 @@ public class LibDash {
         frame.setBounds(100, 100, 1400, 800);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setLocationRelativeTo(null);
+        
+        // Set application icon
+        try {
+            java.awt.Image icon = new javax.swing.ImageIcon(getClass().getResource("/assets/LibManSys_Icon.png")).getImage();
+            frame.setIconImage(icon);
+        } catch (Exception e) {
+            System.err.println("Error loading icon: " + e.getMessage());
+        }
+        
         frame.getContentPane().setLayout(new BorderLayout());
 
         sidebar = createSidebar();
@@ -316,8 +325,7 @@ public class LibDash {
         recentCheckOutsTable.setFillsViewportHeight(true);
         JScrollPane recentScrollPane = new JScrollPane(recentCheckOutsTable);
         recentScrollPane.setBorder(BorderFactory.createTitledBorder("Recent Check-out's"));
-        recentScrollPane.setPreferredSize(new Dimension(0, 150));
-        panel.add(recentScrollPane, BorderLayout.SOUTH);
+        panel.add(recentScrollPane, BorderLayout.CENTER);
         loadRecentCheckOuts();
 
         return panel;
@@ -349,9 +357,8 @@ public class LibDash {
                 String id = "T" + String.format("%03d", result.getInt("transaction_id"));
                 String title = result.getString("trans_book_name");
                 String author = result.getString("book_author_name");
-                String member = result.getString("first_name") + " " + result.getString("last_name");
-                String status = result.getString("transaction_type");
-                
+                                    String member = result.getString("first_name") + " " + result.getString("last_name");
+                                    String type = result.getString("transaction_type");                
                 // Use getString to avoid SQLException for "0000-00-00" dates
                 String date = result.getString("trans_date");
                 if (date == null) date = "";
@@ -359,13 +366,13 @@ public class LibDash {
                 String issuedDate = "";
                 String returnDate = "";
                 
-                if ("borrow".equalsIgnoreCase(status)) {
+                if ("borrow".equalsIgnoreCase(type)) {
                     issuedDate = date;
-                } else if ("return".equalsIgnoreCase(status)) {
+                } else if ("return".equalsIgnoreCase(type)) {
                     returnDate = date;
                 }
                 
-                model.addRow(new Object[]{id, title, author, member, issuedDate, returnDate, status});
+                model.addRow(new Object[]{id, title, author, member, issuedDate, returnDate, type});
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -616,7 +623,7 @@ public class LibDash {
         headerPanel.add(filterComboBox);
         panel.add(headerPanel, BorderLayout.NORTH);
 
-        String[] columns = {"Member ID", "Title", "Author", "Borrowed Date", "Returned Date", "Type", "Action"};
+        String[] columns = {"Member ID", "Title", "Author", "Borrowed Date", "Returned Date", "Type"};
         DefaultTableModel model = new DefaultTableModel(columns, 0);
         checkOutTable = new JTable(model);
         checkOutTable.setFillsViewportHeight(true);
@@ -639,7 +646,7 @@ public class LibDash {
                 String memberId = "M" + String.format("%03d", result.getInt("account_id"));
                 String title = result.getString("trans_book_name");
                 String author = result.getString("book_author_name");
-                String status = result.getString("transaction_type");
+                String type = result.getString("transaction_type");
                 
                 // Use getString to avoid SQLException for "0000-00-00" dates
                 String date = result.getString("trans_date");
@@ -648,13 +655,13 @@ public class LibDash {
                 String borrowedDate = "";
                 String returnedDate = "";
                 
-                if ("borrow".equalsIgnoreCase(status)) {
+                if ("borrow".equalsIgnoreCase(type)) {
                     borrowedDate = date;
-                } else if ("return".equalsIgnoreCase(status)) {
+                } else if ("return".equalsIgnoreCase(type)) {
                     returnedDate = date;
                 }
                 
-                model.addRow(new Object[]{memberId, title, author, borrowedDate, returnedDate, status, "Return / Renew"});
+                model.addRow(new Object[]{memberId, title, author, borrowedDate, returnedDate, type});
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -767,13 +774,7 @@ public class LibDash {
                         }
                     }
                 } else { // Edit button
-                    String name = (String) table.getModel().getValueAt(row, 1);
-                    String email = (String) table.getModel().getValueAt(row, 2);
-                    String[] nameParts = name.split(" ");
-                    String firstName = nameParts[0];
-                    String lastName = nameParts.length > 1 ? nameParts[1] : "";
-
-                    EditUserDialog dialog = new EditUserDialog(frame, "Edit User", true, id, firstName, lastName, email, table == readersTable);
+                    EditUserDialog dialog = new EditUserDialog(frame, "Edit User", true, id, table == readersTable);
                     dialog.setVisible(true);
                 }
             } else if (table == booksTable) {
@@ -801,10 +802,7 @@ public class LibDash {
                         }
                     }
                 } else { // Edit button
-                    String name = (String) table.getModel().getValueAt(row, 1);
-                    String author = (String) table.getModel().getValueAt(row, 2);
-                    String category = (String) table.getModel().getValueAt(row, 3);
-                    EditBookDialog dialog = new EditBookDialog(frame, "Edit Book", true, bookId, name, author, category);
+                    EditBookDialog dialog = new EditBookDialog(frame, "Edit Book", true, bookId);
                     dialog.setVisible(true);
                 }
             }
@@ -814,50 +812,92 @@ public class LibDash {
     // Inner class for the edit user dialog
 	class EditUserDialog extends JDialog {
         private static final long serialVersionUID = 1L;
-		private JTextField firstNameField;
-        private JTextField lastNameField;
-        private JTextField emailField;
+		private JTextField firstNameField, lastNameField, ageField, contactField, emailField, addressField, passwordField;
+        private JComboBox<String> sexComboBox;
         private JButton saveButton;
         private JButton cancelButton;
         private int userId;
         private boolean isReader;
 
-        public EditUserDialog(JFrame parent, String title, boolean modal, int userId, String firstName, String lastName, String email, boolean isReader) {
+        public EditUserDialog(JFrame parent, String title, boolean modal, int userId, boolean isReader) {
             super(parent, title, modal);
             this.userId = userId;
             this.isReader = isReader;
             
-            firstNameField = new JTextField(firstName, 20);
-            lastNameField = new JTextField(lastName, 20);
-            emailField = new JTextField(email, 20);
+            setLayout(new GridLayout(9, 2, 10, 10));
+            
+            firstNameField = new JTextField(20);
+            lastNameField = new JTextField(20);
+            ageField = new JTextField(5);
+            sexComboBox = new JComboBox<>(new String[]{"MALE", "FEMALE"});
+            contactField = new JTextField(15);
+            emailField = new JTextField(20);
+            addressField = new JTextField(20);
+            passwordField = new JTextField(20);
+            
             saveButton = new JButton("Save");
             cancelButton = new JButton("Cancel");
 
-            setLayout(new GridLayout(4, 2, 10, 10));
-            add(new JLabel("First Name:"));
-            add(firstNameField);
-            add(new JLabel("Last Name:"));
-            add(lastNameField);
-            add(new JLabel("Email:"));
-            add(emailField);
-            add(saveButton);
-            add(cancelButton);
+            add(new JLabel("First Name:")); add(firstNameField);
+            add(new JLabel("Last Name:")); add(lastNameField);
+            add(new JLabel("Age:")); add(ageField);
+            add(new JLabel("Sex:")); add(sexComboBox);
+            add(new JLabel("Contact Number:")); add(contactField);
+            add(new JLabel("Email:")); add(emailField);
+            add(new JLabel("Address:")); add(addressField);
+            add(new JLabel("Password:")); add(passwordField);
+            add(saveButton); add(cancelButton);
 
             saveButton.addActionListener(e -> onSave());
             cancelButton.addActionListener(e -> dispose());
+            
+            loadUserData();
 
             pack();
             setLocationRelativeTo(parent);
         }
+        
+        private void loadUserData() {
+            try {
+                String query = "SELECT * FROM account WHERE account_id = ?";
+                PreparedStatement prep = dbConnect.con.prepareStatement(query);
+                prep.setInt(1, userId);
+                ResultSet rs = prep.executeQuery();
+                if (rs.next()) {
+                    firstNameField.setText(rs.getString("first_name"));
+                    lastNameField.setText(rs.getString("last_name"));
+                    ageField.setText(String.valueOf(rs.getInt("age")));
+                    sexComboBox.setSelectedItem(rs.getString("sex"));
+                    contactField.setText(rs.getString("contact_number"));
+                    emailField.setText(rs.getString("email"));
+                    addressField.setText(rs.getString("address"));
+                    passwordField.setText(rs.getString("password"));
+                }
+            } catch (SQLException ex) {
+                ex.printStackTrace();
+                JOptionPane.showMessageDialog(this, "Error loading user data.", "Database Error", JOptionPane.ERROR_MESSAGE);
+            }
+        }
 
         private void onSave() {
             try {
-                String query = "UPDATE account SET first_name = ?, last_name = ?, email = ? WHERE account_id = ?";
+                String query = "UPDATE account SET first_name=?, last_name=?, age=?, sex=?, contact_number=?, email=?, address=?, password=? WHERE account_id=?";
                 PreparedStatement prep = dbConnect.con.prepareStatement(query);
                 prep.setString(1, firstNameField.getText());
                 prep.setString(2, lastNameField.getText());
-                prep.setString(3, emailField.getText());
-                prep.setInt(4, userId);
+                try {
+                    prep.setInt(3, Integer.parseInt(ageField.getText()));
+                } catch (NumberFormatException e) {
+                    JOptionPane.showMessageDialog(this, "Age must be a number.", "Validation Error", JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+                prep.setString(4, (String) sexComboBox.getSelectedItem());
+                prep.setString(5, contactField.getText());
+                prep.setString(6, emailField.getText());
+                prep.setString(7, addressField.getText());
+                prep.setString(8, passwordField.getText());
+                prep.setInt(9, userId);
+                
                 prep.executeUpdate();
 
                 if (isReader) {
@@ -1038,48 +1078,72 @@ public class LibDash {
     // Inner class for the edit book dialog
     class EditBookDialog extends JDialog {
         private static final long serialVersionUID = 1L;
-		private JTextField nameField;
-        private JTextField authorField;
-        private JTextField categoryField;
+		private JTextField nameField, authorField, categoryField, issueDateField;
         private JButton saveButton;
         private JButton cancelButton;
         private int bookId;
 
-        public EditBookDialog(JFrame parent, String title, boolean modal, int bookId, String name, String author, String category) {
+        public EditBookDialog(JFrame parent, String title, boolean modal, int bookId) {
             super(parent, title, modal);
             this.bookId = bookId;
 
-            nameField = new JTextField(name, 30);
-            authorField = new JTextField(author, 30);
-            categoryField = new JTextField(category, 30);
+            setLayout(new GridLayout(5, 2, 10, 10));
+            
+            nameField = new JTextField(30);
+            authorField = new JTextField(30);
+            categoryField = new JTextField(30);
+            issueDateField = new JTextField(30);
+            
             saveButton = new JButton("Save");
             cancelButton = new JButton("Cancel");
 
-            setLayout(new GridLayout(4, 2, 10, 10));
-            add(new JLabel("Name:"));
-            add(nameField);
-            add(new JLabel("Author:"));
-            add(authorField);
-            add(new JLabel("Category:"));
-            add(categoryField);
-            add(saveButton);
-            add(cancelButton);
+            add(new JLabel("Name:")); add(nameField);
+            add(new JLabel("Author:")); add(authorField);
+            add(new JLabel("Category:")); add(categoryField);
+            add(new JLabel("Issue Date (YYYY-MM-DD):")); add(issueDateField);
+            add(saveButton); add(cancelButton);
 
             saveButton.addActionListener(e -> onSave());
             cancelButton.addActionListener(e -> dispose());
+            
+            loadBookData();
 
             pack();
             setLocationRelativeTo(parent);
         }
+        
+        private void loadBookData() {
+            try {
+                String query = "SELECT * FROM books WHERE book_id = ?";
+                PreparedStatement prep = dbConnect.con.prepareStatement(query);
+                prep.setInt(1, bookId);
+                ResultSet rs = prep.executeQuery();
+                if (rs.next()) {
+                    nameField.setText(rs.getString("book_name"));
+                    authorField.setText(rs.getString("book_author"));
+                    categoryField.setText(rs.getString("book_category"));
+                    issueDateField.setText(String.valueOf(rs.getDate("issue_date")));
+                }
+            } catch (SQLException ex) {
+                ex.printStackTrace();
+                JOptionPane.showMessageDialog(this, "Error loading book data.", "Database Error", JOptionPane.ERROR_MESSAGE);
+            }
+        }
 
         private void onSave() {
             try {
-                String query = "UPDATE books SET book_name = ?, book_author = ?, book_category = ? WHERE book_id = ?";
+                String query = "UPDATE books SET book_name = ?, book_author = ?, book_category = ?, issue_date = ? WHERE book_id = ?";
                 PreparedStatement prep = dbConnect.con.prepareStatement(query);
                 prep.setString(1, nameField.getText());
                 prep.setString(2, authorField.getText());
                 prep.setString(3, categoryField.getText());
-                prep.setInt(4, bookId);
+                try {
+                    prep.setDate(4, java.sql.Date.valueOf(issueDateField.getText()));
+                } catch (IllegalArgumentException e) {
+                     JOptionPane.showMessageDialog(this, "Invalid date format. Use YYYY-MM-DD.", "Validation Error", JOptionPane.ERROR_MESSAGE);
+                     return;
+                }
+                prep.setInt(5, bookId);
                 prep.executeUpdate();
 
                 loadBooks();

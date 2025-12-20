@@ -1,6 +1,5 @@
 package libManSys;
 
-import java.awt.EventQueue;
 import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.event.ActionEvent;
@@ -36,19 +35,7 @@ public class Login extends JFrame {
     private BufferedImage logoImage;
     private boolean isDarkMode = false;
 
-    public static void main(String[] args) {
-        EventQueue.invokeLater(new Runnable() {
-            public void run() {
-                try {
-                	UIManager.setLookAndFeel(new FlatLightLaf());
-                    Login frame = new Login();
-                    frame.setVisible(true);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }
-        });
-    }
+
 
     public Login() {
         try {
