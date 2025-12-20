@@ -31,8 +31,6 @@ import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
-import javax.swing.table.JTableHeader;
-
 import com.formdev.flatlaf.*;
 
 public class ReaderSearch extends JFrame {

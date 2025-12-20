@@ -36,7 +36,7 @@ import com.formdev.flatlaf.FlatLightLaf;
 public class Reader_dashboard extends JFrame {
     private static final long serialVersionUID = 1L;
     
-    private JFrame frame;
+
     private JPanel mainPanel;
     private CardLayout cardLayout;
     private JPanel sidebar;

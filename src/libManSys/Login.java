@@ -40,8 +40,6 @@ public class Login extends JFrame {
         EventQueue.invokeLater(new Runnable() {
             public void run() {
                 try {
-                	// Initial Look and Feel handled in constructor/updateTheme
-                	// But for main entry point, let's start with Light to match updateTheme default
                 	UIManager.setLookAndFeel(new FlatLightLaf());
                     Login frame = new Login();
                     frame.setVisible(true);
@@ -85,13 +83,13 @@ public class Login extends JFrame {
                 }
             }
         };
-        logoPanel.setBounds(0, 0, 450, 600); // Adjusted for window decorations
+        logoPanel.setBounds(0, 0, 450, 600); 
         contentPane.add(logoPanel);
 
         // Login Panel
         JPanel loginPanel = new JPanel();
         loginPanel.setLayout(null);
-        loginPanel.setBounds(450, 0, 434, 600); // Adjusted for window decorations
+        loginPanel.setBounds(450, 0, 434, 600);
         contentPane.add(loginPanel);
 
         JLabel lblTitle = new JLabel("W E L C O M E");
@@ -149,8 +147,6 @@ public class Login extends JFrame {
             }
             SwingUtilities.updateComponentTreeUI(this);
             
-            // Re-apply explicit font styles if necessary, but FlatLaf usually handles standard components well.
-            // The paintComponent logic for logoPanel remains same.
         } catch (Exception e) {
             e.printStackTrace();
         }

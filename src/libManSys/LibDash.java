@@ -33,7 +33,6 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JPasswordField;
 import javax.swing.JScrollPane;
-import javax.swing.JSplitPane;
 import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.RowFilter;
@@ -65,15 +64,16 @@ public class LibDash {
     public static void main(String[] args) {
         EventQueue.invokeLater(() -> {
             try {
-                // Initial look and feel will be set in updateTheme()
                 UIManager.setLookAndFeel(new FlatLightLaf());
-                LibDash window = new LibDash("Allison");
             } catch (Exception e) {
                 e.printStackTrace();
             }
         });
     }
 
+    /**
+     * @wbp.parser.entryPoint
+     */
     public LibDash(String userName) {
         dbConnect = new DbConnect();
         dbConnect.connect();
@@ -310,7 +310,7 @@ public class LibDash {
         
         panel.add(topCardsPanel, BorderLayout.NORTH);
         
-        String[] recentColumns = {"ID", "Title", "Author", "Member", "Issued Date", "Return Date", "Status"};
+        String[] recentColumns = {"ID", "Title", "Author", "Member", "Issued Date", "Return Date", "Type"};
         DefaultTableModel recentModel = new DefaultTableModel(recentColumns, 0);
         recentCheckOutsTable = new JTable(recentModel);
         recentCheckOutsTable.setFillsViewportHeight(true);
@@ -337,23 +337,6 @@ public class LibDash {
         return count;
     }
 
-    private void loadTopBooks() {
-        DefaultTableModel model = (DefaultTableModel) topBooksTable.getModel();
-        model.setRowCount(0); // Clear existing data
-        try {
-            String query = "SELECT b.book_name, b.book_author, COUNT(t.book_id) AS times_borrowed FROM transactions t JOIN books b ON t.book_id = b.book_id GROUP BY b.book_name, b.book_author ORDER BY times_borrowed DESC LIMIT 5";
-            PreparedStatement prep = dbConnect.con.prepareStatement(query);
-            ResultSet result = prep.executeQuery();
-            while (result.next()) {
-                String title = result.getString("book_name");
-                String author = result.getString("book_author");
-                int timesBorrowed = result.getInt("times_borrowed");
-                model.addRow(new Object[]{title, author, timesBorrowed});
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-    }
 
     private void loadRecentCheckOuts() {
         DefaultTableModel model = (DefaultTableModel) recentCheckOutsTable.getModel();
@@ -390,7 +373,6 @@ public class LibDash {
     }
 
     private JTable readersTable;
-    private JTable topBooksTable;
     private JTable recentCheckOutsTable;
     private JTable librariansTable;
     private JTable booksTable;
@@ -401,21 +383,7 @@ public class LibDash {
             BorderFactory.createLineBorder(new Color(220, 220, 220)),
             BorderFactory.createEmptyBorder(10, 10, 10, 10)
         ));
-        // Using null background to respect Laf, or explicit white for card effect?
-        // Card effect usually implies white background on light theme, and dark on dark.
-        // Let's rely on updateTheme or just set it based on mode if possible.
-        // But metric cards are re-created? No, they are created once in createDashboardScreen.
-        // So I should let them inherit or handle in updateTheme if I track them.
-        // Since I don't track them individually in a list, I will let them be simple panels.
-        // Or I can force them to be white in light mode and dark in dark mode.
-        // For now, let's leave explicit White, but it might look odd in Dark Mode.
-        // I will remove explicit Color.WHITE and let FlatLaf handle panel background.
-        // But 'card' look usually needs distinction.
-        // I will use a simple trick: if I don't track them, they won't update color dynamically unless I traverse component tree.
-        // SwingUtilities.updateComponentTreeUI handles basic components, but if I hardcoded Color.WHITE, it won't change.
-        // I should use `card.setBackground(null)` or not set it. 
-        // However, the border logic suggests a specific look.
-        // I will set it to null to be safe for now, or use UIManager.getColor("Panel.background").
+
         card.setBackground(null);
         
         JLabel titleLabel = new JLabel(title);
@@ -648,7 +616,7 @@ public class LibDash {
         headerPanel.add(filterComboBox);
         panel.add(headerPanel, BorderLayout.NORTH);
 
-        String[] columns = {"Member ID", "Title", "Author", "Borrowed Date", "Returned Date", "Status", "Action"};
+        String[] columns = {"Member ID", "Title", "Author", "Borrowed Date", "Returned Date", "Type", "Action"};
         DefaultTableModel model = new DefaultTableModel(columns, 0);
         checkOutTable = new JTable(model);
         checkOutTable.setFillsViewportHeight(true);
@@ -844,9 +812,9 @@ public class LibDash {
     }
 
     // Inner class for the edit user dialog
-    @SuppressWarnings("serial")
 	class EditUserDialog extends JDialog {
-        private JTextField firstNameField;
+        private static final long serialVersionUID = 1L;
+		private JTextField firstNameField;
         private JTextField lastNameField;
         private JTextField emailField;
         private JButton saveButton;
@@ -907,6 +875,7 @@ public class LibDash {
 
     // Inner class for the add user dialog
     class AddUserDialog extends JDialog {
+        private static final long serialVersionUID = 1L;
         private JTextField firstNameField, lastNameField, ageField, contactField, emailField, addressField;
         private JPasswordField passwordField;
         private JComboBox<String> sexComboBox;
@@ -1002,9 +971,9 @@ public class LibDash {
     }
 
     // Inner class for the add book dialog
-    @SuppressWarnings("serial")
 	class AddBookDialog extends JDialog {
-        private JTextField nameField;
+        private static final long serialVersionUID = 1L;
+		private JTextField nameField;
         private JTextField authorField;
         private JTextField categoryField;
         private JButton addButton;
@@ -1068,7 +1037,8 @@ public class LibDash {
 
     // Inner class for the edit book dialog
     class EditBookDialog extends JDialog {
-        private JTextField nameField;
+        private static final long serialVersionUID = 1L;
+		private JTextField nameField;
         private JTextField authorField;
         private JTextField categoryField;
         private JButton saveButton;
