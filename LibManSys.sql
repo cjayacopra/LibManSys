@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost
--- Generation Time: Dec 15, 2025 at 04:32 AM
+-- Generation Time: Dec 20, 2025 at 04:22 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -62,7 +62,9 @@ INSERT INTO `account` (`account_id`, `first_name`, `last_name`, `age`, `sex`, `c
 (15, 'Chris', 'Smith', 62, 'MALE', '09421533692', 'chris.smith99@example.com', '536 Main St, Philadelphia', 'reader', 'password96'),
 (18, 'Emily', 'Rodriguez', 52, 'FEMALE', '09402358581', 'emily.rodriguez62@example.com', '139 Main St, Philadelphia', 'librarian', 'password12'),
 (19, 'Peter', 'Rodriguez', 34, 'MALE', '09746751157', 'peter.rodriguez45@example.com', '38 Main St, Phoenix', 'librarian', 'password73'),
-(20, 'Peterrererere', 'Smithhey', 36, 'FEMALE', '09186312842', 'peter.smith86@example.com', '995 Main St, Phoenix', 'librarian', 'password53');
+(20, 'Peterrererere', 'Smithhey', 36, 'FEMALE', '09186312842', 'peter.smith86@example.com', '995 Main St, Phoenix', 'librarian', 'password53'),
+(21, 'Cresencio', 'Acopra', 48, 'MALE', '0909123456', 'cresencio@email.com', 'Bagacay, Legazpi City', 'reader', 'abc_123'),
+(22, 'Another', 'Librarian', 99, 'FEMALE', '0909123456', 'AnLib@email.com', 'Somewhere in the city', 'librarian', 'asdkjhgasdjhgasd');
 
 -- --------------------------------------------------------
 
@@ -190,7 +192,7 @@ ALTER TABLE `transactions`
 -- AUTO_INCREMENT for table `account`
 --
 ALTER TABLE `account`
-  MODIFY `account_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=21;
+  MODIFY `account_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=24;
 
 --
 -- AUTO_INCREMENT for table `books`
@@ -203,17 +205,6 @@ ALTER TABLE `books`
 --
 ALTER TABLE `transactions`
   MODIFY `transaction_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
-
---
--- Constraints for dumped tables
---
-
---
--- Constraints for table `transactions`
---
-ALTER TABLE `transactions`
-  ADD CONSTRAINT `fk_account_id` FOREIGN KEY (`account_id`) REFERENCES `account` (`account_id`),
-  ADD CONSTRAINT `fk_book_id` FOREIGN KEY (`book_id`) REFERENCES `books` (`book_id`);
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
